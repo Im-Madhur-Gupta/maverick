@@ -50,7 +50,7 @@ export class MPCWallet {
     });
   }
 
-  async createWallet(network: string = "base-mainnet"): Promise<WalletInfo> {
+  async createWallet(network: string = "base-sepolia"): Promise<WalletInfo> {
     try {
       this.wallet = await Wallet.create();
       const defaultAddress = await this.wallet.getDefaultAddress().toString();
@@ -80,7 +80,7 @@ export class MPCWallet {
     return {
       walletId: this.wallet.getId()!,
       address: defaultAddress.toString(),
-      network: "base-mainnet", // TODO: Get actual network
+      network: "base-sepolia",
     };
   }
 

@@ -1,14 +1,24 @@
 import { AgentConfig } from '../types';
+import dotenv from "dotenv";
+import path from "path";
+
+// Load environment variables from .env file
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+
+console.log("ENV Check:", {
+  apiKey: process.env.COINBASE_API_KEY_NAME,
+  privateKey: process.env.COINBASE_PRIVATE_KEY?.substring(0, 20) + "...",
+});
 
 export const DEFAULT_CONFIG: AgentConfig = {
   walletConfig: {
-    apiKeyName: process.env.COINBASE_API_KEY_NAME || '',
-    privateKey: process.env.COINBASE_PRIVATE_KEY || '',
-    network: 'base', // Using Base for lower fees
+    apiKeyName: process.env.COINBASE_API_KEY_NAME || "",
+    privateKey: process.env.COINBASE_PRIVATE_KEY || "",
+    network: "base-sepolia", // Using Base Sepolia for lower fees
   },
-  
+
   aiConfig: {
-    model: 'claude-3-sonnet-20240229',  // Using Anthropic's Claude
+    model: "claude-3-sonnet-20240229", // Using Anthropic's Claude
     temperature: 0.7,
     maxTokens: 2000,
   },

@@ -1,4 +1,6 @@
-export const TRADING_PROMPT = `You are an expert memecoin trader analyzing a potential trading opportunity.
+// TODO: Improve the prompts
+
+export const TRADING_PROMPT = `You are an expert meme coin trader analyzing a potential trading opportunity.
 
 Context:
 Token Data: {tokenData}

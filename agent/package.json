@@ -2,17 +2,19 @@
   "name": "memecoin-maverick",
   "version": "1.0.0",
   "description": "AI agent that trades meme coins based on social signals and market data",
-  "main": "dist/agent/src/main.js",
+  "main": "src/main.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/agent/src/main.js",
-    "dev": "ts-node agent/src/main.ts",
-    "test": "ts-node agent/src/test_agent.ts",
+    "start": "node src/main.js",
+    "dev": "ts-node src/main.ts",
+    "test": "ts-node src/test_agent.ts",
     "lint": "eslint . --ext .ts",
-    "format": "prettier --write \"agent/src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\""
   },
   "dependencies": {
     "@coinbase/coinbase-sdk": "^0.11.0",
+    "@langchain/anthropic": "^0.3.8",
+    "@uniswap/v2-core": "^1.0.1",
     "dotenv": "^16.4.5",
     "ethers": "^6.13.4",
     "langchain": "^0.3.6",
