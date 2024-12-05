@@ -1,7 +1,7 @@
 import { ChatAnthropic } from '@langchain/anthropic';
 import { z } from 'zod';
 import { MarketSignal } from '../types';
-import { TRADING_PROMPT, TRADE_VALIDATION_PROMPT, PORTFOLIO_MANAGEMENT_PROMPT } from '../prompts/trading';
+import { TRADING_PROMPT, TRADE_VALIDATION_PROMPT, PORTFOLIO_MANAGEMENT_PROMPT } from '../prompts/external-trading';
 
 // Schema for trading decisions
 const tradingDecision = z.object({

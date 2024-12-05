@@ -56,7 +56,6 @@ export class TradingAgent {
     // 1. Gather market data
     const topTraders = await this.data.getTopTraderActivities([]);
     const socialSignals = await this.data.getFarcasterSignals("");
-    // Here along with onchain data of top traders we should also get onchain data of top performing coins from coingecko maybe on base sepolia, analyse their performance and then make trading decisions so there should be a function to get onchain data of coins from coingecko
 
     // 2. Analyze opportunities
     const opportunities = await this.analyzeOpportunities(

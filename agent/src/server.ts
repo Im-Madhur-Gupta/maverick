@@ -38,6 +38,7 @@ const agent = new TradingAgent(config);
 app.post("/api/create-agent", async (req, res) => {
   try {
     const agentId = await agent.initialize();
+    logger.info(`Agent created with id: ${agentId}`);
     res.json({ success: true, agentId });
   } catch (error) {
     logger.error("Failed to create agent:", error);
@@ -49,6 +50,7 @@ app.post("/api/create-agent", async (req, res) => {
 app.get("/api/agent/:agentId/holdings", async (req, res) => {
   try {
     const holdings = await agent.wallet.getHoldings();
+    logger.info(`Agent holdings: ${JSON.stringify(holdings)}`);
     res.json(holdings);
   } catch (error) {
     logger.error("Failed to get holdings:", error);
