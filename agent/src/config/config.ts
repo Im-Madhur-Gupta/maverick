@@ -1,48 +1,50 @@
-import { AgentConfig } from '../types';
+import { AgentConfig } from "../types";
 import dotenv from "dotenv";
 import path from "path";
 
-// Load environment variables from .env file
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
-console.log("ENV Check:", {
-  apiKey: process.env.COINBASE_API_KEY_NAME,
-  privateKey: process.env.COINBASE_PRIVATE_KEY?.substring(0, 20) + "...",
-});
+export function getConfig(): AgentConfig {
+  return {
+    walletConfig: {
+      fereApiKey: process.env.FERE_API_KEY || "",
+      fereUserId: process.env.FERE_USER_ID || "",
+      network: process.env.NETWORK || "base-sepolia",
+    },
+    aiConfig: {
+      model: "claude-3-sonnet-20240229", // Using Anthropic's Claude
+      temperature: 0.7,
+      maxTokens: 2000,
+    },
+    tradingConfig: {
+      maxSlippage: 0.01,
+      minLiquidity: 1000,
+      maxPositionSize: 0.1,
+      stopLoss: 0.1,
+      takeProfit: 0.3,
+    },
+  };
+}
 
-export const DEFAULT_CONFIG: AgentConfig = {
-  walletConfig: {
-    apiKeyName: process.env.COINBASE_API_KEY_NAME || "",
-    privateKey: process.env.COINBASE_PRIVATE_KEY || "",
-    network: "base-sepolia", // Using Base Sepolia for lower fees
-  },
-
-  aiConfig: {
-    model: "claude-3-sonnet-20240229", // Using Anthropic's Claude
-    temperature: 0.7,
-    maxTokens: 2000,
-  },
-
-  tradingConfig: {
-    maxSlippage: 0.02, // 2% max slippage
-    minLiquidity: 100000, // $100k min liquidity
-    maxPositionSize: 0.1, // 10% of portfolio
-    stopLoss: 0.15, // 15% stop loss
-    takeProfit: 0.3, // 30% take profit
-  },
-};
-
-// Safety checks and validations
 export function validateConfig(config: AgentConfig): void {
-  if (!config.walletConfig.apiKeyName || !config.walletConfig.privateKey) {
-    throw new Error('Missing Coinbase wallet credentials');
+  // Validate wallet config
+  if (!config.walletConfig.fereApiKey || !config.walletConfig.fereUserId) {
+    throw new Error("Missing FereAI credentials");
   }
 
-  if (config.tradingConfig.maxSlippage > 0.05) {
-    throw new Error('Slippage tolerance too high - risk of sandwich attacks');
+  // Validate AI config
+  if (!config.aiConfig.model) {
+    throw new Error("Missing AI model configuration");
   }
 
-  if (config.tradingConfig.maxPositionSize > 0.2) {
-    throw new Error('Position size too large - high risk exposure');
+  // Validate trading config
+  if (
+    config.tradingConfig.maxSlippage <= 0 ||
+    config.tradingConfig.minLiquidity <= 0 ||
+    config.tradingConfig.maxPositionSize <= 0 ||
+    config.tradingConfig.stopLoss <= 0 ||
+    config.tradingConfig.takeProfit <= 0
+  ) {
+    throw new Error("Invalid trading configuration values");
   }
-} 
+}
