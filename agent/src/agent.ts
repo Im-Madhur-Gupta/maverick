@@ -6,18 +6,19 @@ import { validateConfig } from "./config";
 
 export class TradingAgent {
   private ai: AIService;
-  private wallet: WalletService;
   private data: DataService;
   private config: AgentConfig;
   private isRunning: boolean = false;
+
+  wallet: WalletService;
 
   constructor(config: AgentConfig) {
     validateConfig(config);
     this.config = config;
     this.ai = new AIService(process.env.ANTHROPIC_API_KEY || "");
     this.wallet = new WalletService(
-      config.walletConfig.apiKeyName,
-      config.walletConfig.privateKey
+      config.walletConfig.fereApiKey,
+      config.walletConfig.fereUserId
     );
     this.data = new DataService();
   }

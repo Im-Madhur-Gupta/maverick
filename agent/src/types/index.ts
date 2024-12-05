@@ -1,8 +1,8 @@
 export interface AgentConfig {
   // Wallet configuration
   walletConfig: {
-    apiKeyName: string;
-    privateKey: string;
+    fereApiKey: string;
+    fereUserId: string;
     network: string;
   };
   
