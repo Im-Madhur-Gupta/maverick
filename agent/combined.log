@@ -32,3 +32,5 @@
 {"level":"info","message":"Starting new trading cycle...","timestamp":"2024-12-02T06:46:15.852Z"}
 {"level":"info","message":"Starting new trading cycle...","timestamp":"2024-12-02T08:01:38.834Z"}
 {"level":"info","message":"Server running on port 3000","timestamp":"2024-12-05T07:19:32.104Z"}
+{"level":"info","message":"Server running on port 3000","timestamp":"2024-12-05T12:33:33.879Z"}
+{"level":"info","message":"SIGINT received. Shutting down gracefully...","timestamp":"2024-12-05T12:33:36.910Z"}

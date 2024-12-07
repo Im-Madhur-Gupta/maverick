@@ -52,6 +52,7 @@ export class WalletService {
 
       if (disciples.length > 0) {
         this.discipleId = disciples[0].id;
+        this.saveKeyToFile("disciple_id.txt", disciples[0].id);
         return disciples[0].id;
       } else {
         // Create a new disciple with meme coin trading persona
@@ -81,6 +82,8 @@ export class WalletService {
         this.saveKeyToFile("sol_private_key.txt", agent.sol_pvt_key);
         this.saveKeyToFile("evm_private_key.txt", agent.evm_pvt_key);
         this.saveKeyToFile("mnemonic.txt", agent.mnemonic);
+
+        this.saveKeyToFile("disciple_id.txt", agent.id);
 
         this.discipleId = agent.id;
         return agent.id;

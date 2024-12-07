@@ -1,3 +1,7 @@
+// multiple personas -> user can choose
+
+// add buy signal support
+
 import axios, { AxiosResponse } from "axios";
 import {
   MEMECOIN_TRADER_PERSONA,

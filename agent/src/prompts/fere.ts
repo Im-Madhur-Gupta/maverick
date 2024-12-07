@@ -48,4 +48,4 @@ Make decisions that:
 - Optimize for consistent returns
 - Consider market cycles
 - Account for gas costs
-- Preserve capital in downturns`; 
+- Preserve capital in downturns`;

@@ -1,125 +1,81 @@
-import { ChatAnthropic } from '@langchain/anthropic';
-import { z } from 'zod';
-import { MarketSignal } from '../types';
-import { TRADING_PROMPT, TRADE_VALIDATION_PROMPT, PORTFOLIO_MANAGEMENT_PROMPT } from '../prompts/external-trading';
-
-// Schema for trading decisions
-const tradingDecision = z.object({
-  action: z.enum(['BUY', 'SELL', 'HOLD']),
-  confidence: z.number().min(0).max(1),
-  reasoning: z.string(),
-  riskAssessment: z.object({
-    pumpAndDumpRisk: z.number().min(0).max(1),
-    liquidityRisk: z.number().min(0).max(1),
-    volatilityRisk: z.number().min(0).max(1),
-  }),
-});
-
-// Schema for trade validation
-const tradeValidation = z.object({
-  decision: z.enum(['YES', 'NO']),
-  confidence: z.number().min(0).max(1),
-  reasoning: z.string(),
-  riskFactors: z.array(z.string()),
-});
-
-// Schema for portfolio management
-const portfolioManagement = z.object({
-  adjustments: z.array(z.object({
-    asset: z.string(),
-    action: z.enum(['INCREASE', 'DECREASE', 'EXIT']),
-    amount: z.string(),
-    reason: z.string(),
-  })),
-  riskUpdates: z.object({
-    stopLoss: z.string(),
-    takeProfit: z.string(),
-  }),
-  newOpportunities: z.array(z.object({
-    asset: z.string(),
-    allocation: z.string(),
-    reasoning: z.string(),
-  })),
-});
+import { Anthropic } from '@anthropic-ai/sdk';
 
 export class AIService {
-  private model: ChatAnthropic;
-  private tradingAnalysis;
-  private tradeValidation;
-  private portfolioManagement;
+    private client: Anthropic;
 
-  constructor(apiKey: string) {
-    if (!apiKey) {
-      throw new Error('Anthropic API key is required');
+    constructor(apiKey: string) {
+        this.client = new Anthropic({ apiKey });
     }
 
-    this.model = new ChatAnthropic({
-      anthropicApiKey: apiKey,
-      modelName: "claude-3-sonnet-20240229",
-      temperature: 0.7
-    });
+    async analyzeTradingOpportunity(
+        tokenData: any,
+        signals: any[],
+        traders: any[],
+        promptModifiers: string[] = []
+    ) {
+        const basePrompt = `You are an expert memecoin trader analyzing a potential trading opportunity.
+Consider the following data points carefully:
 
-    this.tradingAnalysis = this.model.withStructuredOutput(tradingDecision);
-    this.tradeValidation = this.model.withStructuredOutput(tradeValidation);
-    this.portfolioManagement = this.model.withStructuredOutput(portfolioManagement);
-  }
+Token Metrics:
+${JSON.stringify(tokenData, null, 2)}
 
-  async analyzeTradingOpportunity(
-    tokenData: any,
-    socialSignals: any[],
-    traderProfiles: any[]
-  ) {
-    try {
-      const prompt = TRADING_PROMPT
-        .replace('{tokenData}', JSON.stringify(tokenData))
-        .replace('{socialSignals}', JSON.stringify(socialSignals))
-        .replace('{traderProfiles}', JSON.stringify(traderProfiles));
+Market Signals:
+${JSON.stringify(signals, null, 2)}
 
-      const decision = await this.tradingAnalysis.invoke(prompt);
-      return decision;
-    } catch (error) {
-      console.error('Error in AI trading analysis:', error);
-      // Return HOLD with low confidence on error
-      return {
-        action: 'HOLD',
-        confidence: 0.1,
-        reasoning: 'Error in analysis',
-        riskAssessment: {
-          pumpAndDumpRisk: 1,
-          liquidityRisk: 1,
-          volatilityRisk: 1,
-        },
-      };
+Top Trader Activities:
+${JSON.stringify(traders, null, 2)}
+
+Special Considerations:
+${promptModifiers.join('\n')}
+
+Based on this data and the special considerations above, provide a trading decision in JSON format with:
+1. action: "BUY", "SELL", or "HOLD"
+2. confidence: number between 0-1
+3. reasoning: brief explanation
+4. riskFactors: array of identified risk factors
+5. positionSizing: recommended position size as percentage of portfolio (0-100)`;
+
+        const response = await this.client.messages.create({
+            model: 'claude-2',
+            max_tokens: 1000,
+            messages: [{ role: 'user', content: basePrompt }]
+        });
+
+        try {
+            const result = JSON.parse(response.content[0].text);
+            return {
+                ...result,
+                confidence: result.confidence || 0,
+                riskFactors: result.riskFactors || [],
+                positionSizing: result.positionSizing || 10 // Default 10%
+            };
+        } catch (error) {
+            console.error('Error parsing AI response:', error);
+            return {
+                action: 'HOLD',
+                confidence: 0,
+                reasoning: 'Error in analysis',
+                riskFactors: ['Analysis error'],
+                positionSizing: 0
+            };
+        }
     }
-  }
 
-  async validateTrade(signal: MarketSignal, historicalData: any): Promise<boolean> {
-    try {
-      const prompt = TRADE_VALIDATION_PROMPT
-        .replace('{signal}', JSON.stringify(signal))
-        .replace('{historicalData}', JSON.stringify(historicalData));
+    async validateTrade(signal: any, historicalData: any, tokenConfig?: any): Promise<boolean> {
+        const prompt = `Validate this trade:
+Signal: ${JSON.stringify(signal)}
+Historical Data: ${JSON.stringify(historicalData)}
+Token Configuration: ${JSON.stringify(tokenConfig)}
 
-      const validation = await this.tradeValidation.invoke(prompt);
-      
-      // Only approve trades with high confidence and YES decision
-      return validation.decision === 'YES' && validation.confidence > 0.8;
-    } catch (error) {
-      console.error('Error in trade validation:', error);
-      return false;
+Consider the token configuration carefully, including any position limits, stop loss, or take profit levels.
+Return true only if this trade appears safe, legitimate, and complies with the token configuration.`;
+
+        const response = await this.client.messages.create({
+            model: 'claude-2',
+            max_tokens: 100,
+            messages: [{ role: 'user', content: prompt }]
+        });
+
+        return response.content[0].text.toLowerCase().includes('true');
     }
-  }
-
-  async analyzePortfolio(portfolio: any, marketConditions: any) {
-    try {
-      const prompt = PORTFOLIO_MANAGEMENT_PROMPT
-        .replace('{portfolio}', JSON.stringify(portfolio))
-        .replace('{marketConditions}', JSON.stringify(marketConditions));
-
-      const analysis = await this.portfolioManagement.invoke(prompt);
-      return analysis;
-    } catch (error) {
-      console.error('Error in portfolio analysis:', error);
-      throw error;
-    }
-  }
 } 

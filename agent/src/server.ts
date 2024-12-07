@@ -5,6 +5,8 @@ import morgan from "morgan";
 import { TradingAgent } from "./agent";
 import { getConfig } from "./config/config";
 import winston from "winston";
+import { SocialSignalsCron } from "./cron/socialSignals";
+import { AgentPersona } from "./types/agent";
 
 // Setup logging
 const logger = winston.createLogger({
@@ -32,14 +34,52 @@ app.use(express.json());
 const config = getConfig();
 const agent = new TradingAgent(config);
 
+// Initialize social signals cron job
+const socialSignalsCron = new SocialSignalsCron();
+socialSignalsCron.start();
+
+// Cleanup on server shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received. Shutting down gracefully...');
+  socialSignalsCron.stop();
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received. Shutting down gracefully...');
+  socialSignalsCron.stop();
+  process.exit(0);
+});
+
 // Routes
 
 // Create agent
 app.post("/api/create-agent", async (req, res) => {
   try {
+    const { personaId } = req.body;
+    
+    if (personaId === undefined || ![0, 1, 2].includes(personaId)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "Invalid personaId. Must be 0 (MOON_CHASER), 1 (MEME_LORD), or 2 (WHALE_WATCHER)" 
+      });
+    }
+
+    const personas: AgentPersona[] = ['MOON_CHASER', 'MEME_LORD', 'WHALE_WATCHER'];
+    const selectedPersona = personas[personaId];
+
+    // Update config with selected persona
+    const newConfig = {
+      ...config,
+      persona: selectedPersona
+    };
+
+    // Create new agent instance with persona-specific config
+    const agent = new TradingAgent(newConfig);
     const agentId = await agent.initialize();
-    logger.info(`Agent created with id: ${agentId}`);
-    res.json({ success: true, agentId });
+
+    logger.info(`Agent created with id: ${agentId} and persona: ${selectedPersona}`);
+    res.json({ success: true, agentId, persona: selectedPersona });
   } catch (error) {
     logger.error("Failed to create agent:", error);
     res.status(500).json({ success: false, error: "Failed to create agent" });
