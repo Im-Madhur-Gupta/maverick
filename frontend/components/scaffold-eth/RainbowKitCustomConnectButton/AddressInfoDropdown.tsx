@@ -14,9 +14,9 @@ import {
   DocumentDuplicateIcon,
   QrCodeIcon,
 } from "@heroicons/react/24/outline";
-import { BlockieAvatar, isENS } from "~~/components/scaffold-eth";
-import { useOutsideClick } from "~~/hooks/scaffold-eth";
-import { getTargetNetworks } from "~~/utils/scaffold-eth";
+import { BlockieAvatar, isENS } from "@/components/scaffold-eth";
+import { useOutsideClick } from "@/hooks/scaffold-eth";
+import { getTargetNetworks } from "@/utils/scaffold-eth";
 
 const allowedNetworks = getTargetNetworks();
 

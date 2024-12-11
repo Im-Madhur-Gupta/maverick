@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
+import { RainbowKitCustomConnectButton } from "@/components/scaffold-eth";
 
 export const Header = () => {
   return (

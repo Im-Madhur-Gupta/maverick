@@ -5,7 +5,7 @@ import { useDebounceValue } from "usehooks-ts";
 import { Address, isAddress } from "viem";
 import { normalize } from "viem/ens";
 import { useEnsAddress, useEnsAvatar, useEnsName } from "wagmi";
-import { CommonInputProps, InputBase, isENS } from "~~/components/scaffold-eth";
+import { CommonInputProps, InputBase, isENS } from "@/components/scaffold-eth";
 
 /**
  * Address input with ENS name resolution
@@ -96,11 +96,7 @@ export const AddressInput = ({ value, name, placeholder, onChange, disabled }: C
               <span className="w-[35px]">
                 {
                   // eslint-disable-next-line
-                  <img
-                    className="w-full rounded-full"
-                    src={ensAvatar}
-                    alt={`${ensAddress} avatar`}
-                  />
+                  <img className="w-full rounded-full" src={ensAvatar} alt={`${ensAddress} avatar`} />
                 }
               </span>
             ) : null}

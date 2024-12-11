@@ -1,5 +1,5 @@
-import { useTargetNetwork } from "~~/hooks/scaffold-eth";
-import { GenericContractsDeclaration, contracts } from "~~/utils/scaffold-eth/contract";
+import { useTargetNetwork } from "@/hooks/scaffold-eth";
+import { GenericContractsDeclaration, contracts } from "@/utils/scaffold-eth/contract";
 
 const DEFAULT_ALL_CONTRACTS: GenericContractsDeclaration[number] = {};
 
