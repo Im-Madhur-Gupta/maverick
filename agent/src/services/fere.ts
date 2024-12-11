@@ -1,9 +1,9 @@
+// multiple personas -> user can choose
+
+// add buy signal support
+
 import axios, { AxiosResponse } from "axios";
-import {
-  MEMECOIN_TRADER_PERSONA,
-  MEMECOIN_POOL_DECISION_PROMPT,
-  MEMECOIN_PORTFOLIO_DECISION_PROMPT,
-} from "../prompts/fere";
+import { AgentHolding } from "./data";
 
 interface CreateAgentParams {
   fereUserId: string;
@@ -11,8 +11,8 @@ interface CreateAgentParams {
   description: string;
   persona: string;
   dataSource: string;
-  decisionPromptPool: string;
-  decisionPromptPortfolio: string;
+  decisionPromptPool: any;
+  decisionPromptPortfolio: any;
   twitterUsername?: string;
   fcUsername?: string;
   simulation?: boolean;
@@ -49,7 +49,7 @@ interface Disciple {
 export class FereAgent {
   private fereApiKey: string;
   fereUserId: string;
-  private baseUrl: string = "https://api.fereai.xyz/agents";
+  private baseUrl: string = "https://api.fereai.xyz/ta";
 
   constructor(fereApiKey: string, fereUserId: string) {
     this.fereApiKey = fereApiKey;
@@ -65,17 +65,15 @@ export class FereAgent {
   }
 
   async createAgent(params: CreateAgentParams): Promise<any | null> {
-    const url = `${this.baseUrl}/ta/agent/`;
+    const url = `${this.baseUrl}/agent/`;
     const payload = {
       user_id: params.fereUserId,
       name: params.name,
       description: params.description,
-      persona: params.persona || MEMECOIN_TRADER_PERSONA,
+      persona: params.persona,
       data_source: params.dataSource,
-      decision_prompt_pool:
-        params.decisionPromptPool || MEMECOIN_POOL_DECISION_PROMPT,
-      decision_prompt_portfolio:
-        params.decisionPromptPortfolio || MEMECOIN_PORTFOLIO_DECISION_PROMPT,
+      // decision_prompt_pool: params.decisionPromptPool,
+      // decision_prompt_portfolio: params.decisionPromptPortfolio,
       twitter_username: params.twitterUsername,
       fc_username: params.fcUsername,
       dry_run: params.simulation || false,
@@ -128,7 +126,7 @@ export class FereAgent {
     }
   }
 
-  async getHoldings(discipleAgentId: string): Promise<any[] | void> {
+  async getHoldings(discipleAgentId: string): Promise<AgentHolding[] | void> {
     const url = `${this.baseUrl}/agent/${discipleAgentId}/holdings/`;
 
     try {

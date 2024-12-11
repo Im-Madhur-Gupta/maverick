@@ -44,6 +44,7 @@ export interface MarketSignal {
   action: 'BUY' | 'SELL' | 'HOLD';
   source: 'KOL' | 'ONCHAIN' | 'SOCIAL';
   timestamp: number;
+  amount: number | null;
 }
 
 export interface AgentMemory {
