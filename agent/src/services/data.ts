@@ -1,7 +1,7 @@
 import { TraderProfile, MarketSignal } from "../types";
 import axios from "axios";
 
-interface AgentHolding {
+export interface AgentHolding {
   id: string;
   agent_id: string;
   token_name: string;
@@ -167,154 +167,152 @@ export class DataService {
   }
 
   async getFarcasterSignals(
-    tokenName: string,
-    currentHolding: AgentHolding
-  ): Promise<MarketSignal> {
-    let totalConfidence = 0;
-    let weightedBuyCount = 0;
-    let weightedSellCount = 0;
-    let weightedHoldCount = 0;
-    let totalWeight = 0;
-    let latestTimestamp = 0;
+    agentHoldings: AgentHolding[],
+    persona: string = "MEME_LORD"
+  ): Promise<MarketSignal[]> {
+    const signals: MarketSignal[] = [];
 
-    // 1. Get signals from keyword search
-    const keywordCasts = await this.fetchCastsByKeyword(tokenName);
-    for (const cast of keywordCasts) {
-      const confidence = this.calculateSocialScore(cast);
-      if (confidence > this.SIGNAL_THRESHOLD) {
-        const weight = 1.0;
-        const action = this.determineTradingAction(cast);
+    // Adjust weights based on persona
+    const socialWeight = persona === "MEME_LORD" ? 1.5 : 1.0;
+    const kolWeight = persona === "WHALE_WATCHER" ? 1.5 : 1.0;
 
-        totalConfidence += confidence * weight;
-        totalWeight += weight;
+    for (const holding of agentHoldings) {
+      const tokenName = holding.token_name;
+      let totalConfidence = 0;
+      let weightedBuyCount = 0;
+      let weightedSellCount = 0;
+      let weightedHoldCount = 0;
+      let totalWeight = 0;
+      let latestTimestamp = 0;
 
-        switch (action) {
-          case "BUY":
-            weightedBuyCount += weight;
-            break;
-          case "SELL":
-            weightedSellCount += weight;
-            break;
-          case "HOLD":
-            weightedHoldCount += weight;
-            break;
+      // 1. Get signals from keyword search with persona-adjusted weight
+      const keywordCasts = await this.fetchCastsByKeyword(tokenName);
+      for (const cast of keywordCasts) {
+        const confidence = this.calculateSocialScore(cast);
+        if (confidence > this.SIGNAL_THRESHOLD) {
+          const weight = socialWeight;
+          const action = this.determineTradingAction(cast);
+
+          totalConfidence += confidence * weight;
+          totalWeight += weight;
+
+          switch (action) {
+            case "BUY":
+              weightedBuyCount += weight;
+              break;
+            case "SELL":
+              weightedSellCount += weight;
+              break;
+            case "HOLD":
+              weightedHoldCount += weight;
+              break;
+          }
+
+          latestTimestamp = Math.max(latestTimestamp, cast.body.publishedAt);
         }
-
-        latestTimestamp = Math.max(latestTimestamp, cast.body.publishedAt);
       }
-    }
 
-    // 2. Get signals from KOL monitoring
-    const kolCasts = await this.fetchCastsByKOL();
-    const relevantKolCasts = kolCasts.filter((cast) =>
-      cast.body.data.text.toLowerCase().includes(tokenName.toLowerCase())
-    );
+      // 2. Get signals from KOL monitoring with persona-adjusted weight
+      const kolCasts = await this.fetchCastsByKOL();
+      const relevantKolCasts = kolCasts.filter((cast) =>
+        cast.body.data.text.toLowerCase().includes(tokenName.toLowerCase())
+      );
 
-    for (const cast of relevantKolCasts) {
-      const confidence = this.calculateSocialScore(cast);
-      if (confidence > this.SIGNAL_THRESHOLD) {
-        const weight = 1.5;
-        const action = this.determineTradingAction(cast);
+      for (const cast of relevantKolCasts) {
+        const confidence = this.calculateSocialScore(cast);
+        if (confidence > this.SIGNAL_THRESHOLD) {
+          const weight = kolWeight;
+          const action = this.determineTradingAction(cast);
 
-        totalConfidence += confidence * weight;
-        totalWeight += weight;
+          totalConfidence += confidence * weight;
+          totalWeight += weight;
 
-        switch (action) {
-          case "BUY":
-            weightedBuyCount += weight;
-            break;
-          case "SELL":
-            weightedSellCount += weight;
-            break;
-          case "HOLD":
-            weightedHoldCount += weight;
-            break;
+          switch (action) {
+            case "BUY":
+              weightedBuyCount += weight;
+              break;
+            case "SELL":
+              weightedSellCount += weight;
+              break;
+            case "HOLD":
+              weightedHoldCount += weight;
+              break;
+          }
+
+          latestTimestamp = Math.max(latestTimestamp, cast.body.publishedAt);
         }
-
-        latestTimestamp = Math.max(latestTimestamp, cast.body.publishedAt);
       }
-    }
 
-    // If no signals found, return HOLD with low confidence
-    if (totalWeight === 0) {
-      return {
-        tokenAddress: tokenName,
-        confidence: 0.1,
-        action: "HOLD",
-        source: "SOCIAL",
-        timestamp: Date.now(),
-        amount: null,
-      };
-    }
-
-    // Calculate final confidence and action
-    const finalConfidence = totalConfidence / totalWeight;
-
-    // Determine final action based on weighted counts
-    let finalAction: "BUY" | "SELL" | "HOLD";
-    const maxCount = Math.max(
-      weightedBuyCount,
-      weightedSellCount,
-      weightedHoldCount
-    );
-
-    if (maxCount === weightedBuyCount) finalAction = "BUY";
-    else if (maxCount === weightedSellCount) finalAction = "SELL";
-    else finalAction = "HOLD";
-
-    // Determine amount based on action and confidence
-    let amount: number | null = null;
-    if (finalAction === 'SELL') {
-      // Calculate sell amount based on confidence levels
-      // confidence ranges: 0.6-0.7 (low), 0.7-0.85 (medium), 0.85+ (high)
-      if (finalConfidence >= 0.85) {
-        // High confidence: Sell 90-100% of holdings
-        amount = Math.floor(currentHolding.tokens_bought * 0.9);
-      } else if (finalConfidence >= 0.7) {
-        // Medium confidence: Sell 50-75% of holdings
-        const sellPercentage = 0.5 + ((finalConfidence - 0.7) / 0.15) * 0.25;
-        amount = Math.floor(currentHolding.tokens_bought * sellPercentage);
-      } else {
-        // Low confidence: Sell 25-50% of holdings
-        const sellPercentage = 0.25 + ((finalConfidence - 0.6) / 0.1) * 0.25;
-        amount = Math.floor(currentHolding.tokens_bought * sellPercentage);
+      // If no signals found, return HOLD with low confidence
+      if (totalWeight === 0) {
+        signals.push({
+          tokenAddress: tokenName,
+          confidence: 0.1,
+          action: "HOLD",
+          source: "SOCIAL",
+          timestamp: Date.now(),
+          amount: null,
+        });
+        continue;
       }
-    } else if (finalAction === 'BUY') {
-      // Calculate buy amount based on confidence and current holdings
-      // For new tokens (tokens_bought = 0), we'll use confidence directly
-      // For existing holdings, we'll increase position based on confidence
-      
-      if (currentHolding.tokens_bought === 0) {
-        // New position: Buy amount based on confidence
-        // Start with a modest position for low confidence
-        const baseAmount = 1000; // Base amount in tokens
-        amount = Math.floor(baseAmount * (1 + finalConfidence));
-      } else {
-        // Existing position: Increase based on confidence
+
+      // Calculate final confidence and action
+      const finalConfidence = totalConfidence / totalWeight;
+
+      // Determine final action based on weighted counts
+      let finalAction: "BUY" | "SELL" | "HOLD";
+      const maxCount = Math.max(
+        weightedBuyCount,
+        weightedSellCount,
+        weightedHoldCount
+      );
+
+      if (maxCount === weightedBuyCount) finalAction = "BUY";
+      else if (maxCount === weightedSellCount) finalAction = "SELL";
+      else finalAction = "HOLD";
+
+      // Calculate amount based on holding and confidence
+      let amount: number | null = null;
+      if (finalAction === "SELL") {
         if (finalConfidence >= 0.85) {
-          // High confidence: Increase position by 50-100%
-          const buyPercentage = 0.5 + ((finalConfidence - 0.85) / 0.15) * 0.5;
-          amount = Math.floor(currentHolding.tokens_bought * buyPercentage);
+          amount = Math.floor(holding.tokens_bought * 0.9);
         } else if (finalConfidence >= 0.7) {
-          // Medium confidence: Increase position by 25-50%
-          const buyPercentage = 0.25 + ((finalConfidence - 0.7) / 0.15) * 0.25;
-          amount = Math.floor(currentHolding.tokens_bought * buyPercentage);
+          const sellPercentage = 0.5 + ((finalConfidence - 0.7) / 0.15) * 0.25;
+          amount = Math.floor(holding.tokens_bought * sellPercentage);
         } else {
-          // Low confidence: Increase position by 10-25%
-          const buyPercentage = 0.1 + ((finalConfidence - 0.6) / 0.1) * 0.15;
-          amount = Math.floor(currentHolding.tokens_bought * buyPercentage);
+          const sellPercentage = 0.25 + ((finalConfidence - 0.6) / 0.1) * 0.25;
+          amount = Math.floor(holding.tokens_bought * sellPercentage);
+        }
+      } else if (finalAction === "BUY") {
+        if (holding.tokens_bought === 0) {
+          const baseAmount = 1000;
+          amount = Math.floor(baseAmount * (1 + finalConfidence));
+        } else {
+          if (finalConfidence >= 0.85) {
+            const buyPercentage = 0.5 + ((finalConfidence - 0.85) / 0.15) * 0.5;
+            amount = Math.floor(holding.tokens_bought * buyPercentage);
+          } else if (finalConfidence >= 0.7) {
+            const buyPercentage =
+              0.25 + ((finalConfidence - 0.7) / 0.15) * 0.25;
+            amount = Math.floor(holding.tokens_bought * buyPercentage);
+          } else {
+            const buyPercentage = 0.1 + ((finalConfidence - 0.6) / 0.1) * 0.15;
+            amount = Math.floor(holding.tokens_bought * buyPercentage);
+          }
         }
       }
+
+      signals.push({
+        tokenAddress: tokenName,
+        confidence: finalConfidence,
+        action: finalAction,
+        source: weightedBuyCount > weightedSellCount ? "SOCIAL" : "KOL",
+        timestamp: latestTimestamp || Date.now(),
+        amount,
+      });
     }
 
-    return {
-      tokenAddress: tokenName,
-      confidence: finalConfidence,
-      action: finalAction,
-      source: weightedBuyCount > weightedSellCount ? "SOCIAL" : "KOL",
-      timestamp: latestTimestamp || Date.now(),
-      amount,
-    };
+    return signals;
   }
 
   async getTopTraderActivities(addresses: string[]): Promise<TraderProfile[]> {

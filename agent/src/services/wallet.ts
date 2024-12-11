@@ -1,12 +1,11 @@
 import { Transaction } from "../types";
 import { FereAgent } from "./fere";
-import {
-  MEMECOIN_TRADER_PERSONA,
-  MEMECOIN_POOL_DECISION_PROMPT,
-  MEMECOIN_PORTFOLIO_DECISION_PROMPT,
-} from "../prompts/fere";
+import { PERSONA_PROMPTS } from "../prompts/fere";
 import fs from "fs";
 import path from "path";
+import { PERSONA_CONFIGS } from "../config/personas";
+import { AgentPersona } from "../types/agent";
+import { AgentHolding } from "./data";
 
 interface WalletBalance {
   total: number;
@@ -18,7 +17,8 @@ export class WalletService {
   private fereAgent: FereAgent;
   private discipleId: string | null = null;
   private keysDir: string;
-  
+  private personaId: AgentPersona | null = null;
+
   solAddress: string | null = null;
   evmAddress: string | null = null;
 
@@ -45,25 +45,40 @@ export class WalletService {
     return portfolio?.wallet_address || "";
   }
 
-  async initialize(): Promise<string> {
+  async initialize(personaId: AgentPersona): Promise<{
+    agentId: string;
+    evmAddress: string;
+    solAddress: string;
+  }> {
     try {
       // Create a new disciple if none exists
       const disciples = await this.fereAgent.fetchDisciples();
 
+      this.personaId = personaId;
+
+      const personaPrompts = PERSONA_PROMPTS[personaId];
+
       if (disciples.length > 0) {
         this.discipleId = disciples[0].id;
         this.saveKeyToFile("disciple_id.txt", disciples[0].id);
-        return disciples[0].id;
+        return {
+          agentId: disciples[0].id,
+          evmAddress: "", // TODO: Add this
+          solAddress: "", // TODO: Add this
+        };
       } else {
+        const { persona, poolDecisionPrompt, portfolioDecisionPrompt } =
+          personaPrompts;
+
         // Create a new disciple with meme coin trading persona
         const agent = await this.fereAgent.createAgent({
           fereUserId: this.fereAgent.fereUserId,
           name: "Memecoin Maverick",
           description: "A specialized memecoin trader focused on Solana",
-          persona: MEMECOIN_TRADER_PERSONA,
+          persona,
           dataSource: "trending",
-          decisionPromptPool: MEMECOIN_POOL_DECISION_PROMPT,
-          decisionPromptPortfolio: MEMECOIN_PORTFOLIO_DECISION_PROMPT,
+          decisionPromptPool: poolDecisionPrompt,
+          decisionPromptPortfolio: portfolioDecisionPrompt,
           simulation: false,
           maxInvestmentPerSession: 0.2,
           stopLoss: 0.5,
@@ -86,7 +101,11 @@ export class WalletService {
         this.saveKeyToFile("disciple_id.txt", agent.id);
 
         this.discipleId = agent.id;
-        return agent.id;
+        return {
+          agentId: agent.id,
+          evmAddress: agent.evm_address,
+          solAddress: agent.sol_address,
+        };
       }
     } catch (error) {
       console.error("Failed to initialize disciple:", error);
@@ -94,55 +113,55 @@ export class WalletService {
     }
   }
 
-  async executeTransaction(transaction: Transaction): Promise<string> {
-    if (!this.discipleId) {
-      throw new Error("Disciple not initialized");
-    }
+  // async executeTransaction(transaction: Transaction): Promise<string> {
+  //   if (!this.discipleId) {
+  //     throw new Error("Disciple not initialized");
+  //   }
 
-    try {
-      if (transaction.type === "BUY") {
-        // For buys, we let the agent decide based on its analysis
-        const recommendations = await this.fereAgent.getTradeRecommendations(
-          this.discipleId
-        );
-        const matchingRec = recommendations?.find(
-          (rec) => rec.token_address === transaction.tokenAddress
-        );
+  //   try {
+  //     if (transaction.type === "BUY") {
+  //       // For buys, we let the agent decide based on its analysis
+  //       const recommendations = await this.fereAgent.getTradeRecommendations(
+  //         this.discipleId
+  //       );
+  //       const matchingRec = recommendations?.find(
+  //         (rec) => rec.token_address === transaction.tokenAddress
+  //       );
 
-        if (!matchingRec || matchingRec.decision !== "BUY") {
-          throw new Error("Agent does not recommend buying this token");
-        }
+  //       if (!matchingRec || matchingRec.decision !== "BUY") {
+  //         throw new Error("Agent does not recommend buying this token");
+  //       }
 
-        // The agent will handle the buy transaction
-        return "HANDLED_BY_AGENT";
-      } else {
-        // For sells, we need to find the holding and sell it
-        const holdings = await this.fereAgent.getHoldings(this.discipleId);
-        const holding = holdings?.find(
-          (h) => h.token_address === transaction.tokenAddress
-        );
+  //       // The agent will handle the buy transaction
+  //       return "HANDLED_BY_AGENT";
+  //     } else {
+  //       // For sells, we need to find the holding and sell it
+  //       const holdings = await this.fereAgent.getHoldings(this.discipleId);
+  //       const holding = holdings?.find(
+  //         (h) => h.token_address === transaction.tokenAddress
+  //       );
 
-        if (!holding) {
-          throw new Error("No matching holding found");
-        }
+  //       if (!holding) {
+  //         throw new Error("No matching holding found");
+  //       }
 
-        const task = await this.fereAgent.sellHolding(
-          this.discipleId,
-          holding.id,
-          Number(transaction.amount)
-        );
+  //       const task = await this.fereAgent.sellHolding(
+  //         this.discipleId,
+  //         holding.id,
+  //         Number(transaction.amount)
+  //       );
 
-        if (!task) {
-          throw new Error("Failed to initiate sell");
-        }
+  //       if (!task) {
+  //         throw new Error("Failed to initiate sell");
+  //       }
 
-        return task.task_id;
-      }
-    } catch (error) {
-      console.error("Transaction failed:", error);
-      throw error;
-    }
-  }
+  //       return task.task_id;
+  //     }
+  //   } catch (error) {
+  //     console.error("Transaction failed:", error);
+  //     throw error;
+  //   }
+  // }
 
   async getBalance(): Promise<WalletBalance> {
     if (!this.discipleId) {
@@ -195,7 +214,7 @@ export class WalletService {
     }
   }
 
-  async getHoldings() {
+  async getHoldings(): Promise<AgentHolding[] | void> {
     if (!this.discipleId) {
       throw new Error("Disciple not initialized");
     }

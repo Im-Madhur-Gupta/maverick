@@ -76,10 +76,10 @@ app.post("/api/create-agent", async (req, res) => {
 
     // Create new agent instance with persona-specific config
     const agent = new TradingAgent(newConfig);
-    const agentId = await agent.initialize();
+    const { agentId, evmAddress, solAddress } = await agent.initialize(selectedPersona);
 
     logger.info(`Agent created with id: ${agentId} and persona: ${selectedPersona}`);
-    res.json({ success: true, agentId, persona: selectedPersona });
+    res.json({ success: true, agentId, persona: selectedPersona, evmAddress, solAddress });
   } catch (error) {
     logger.error("Failed to create agent:", error);
     res.status(500).json({ success: false, error: "Failed to create agent" });
