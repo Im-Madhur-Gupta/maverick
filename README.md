@@ -1,4 +1,8 @@
-# MemeCoin Maverick  
+# MemeCoin Maverick
+
+<div align="center">
+    <img src="https://github.com/user-attachments/assets/d58f2f74-a509-4e99-8428-6dea918a7826" alt="Logo" height="250">
+</div>
 
 ### **Overview**  
 **MemeCoin Maverick** is an AI agent that autonomously trades meme coins for you based on your preferences and insights from top traders. Built to simplify meme coin trading, the agent leverages real-time onchain and social data for intelligent, automated decision-making.  
