@@ -30,9 +30,8 @@ interface FarcasterCast {
 
 // Top memecoin traders/KOLs to monitor
 const KOL_HANDLES = [
-  "degen",
-  "memecoinchad",
-  "shibamaster",
+  "drmat",
+  "kaloh",
   // Add more KOL handles here
 ];
 
