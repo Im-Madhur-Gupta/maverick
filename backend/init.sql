@@ -1,0 +1,1 @@
+CREATE DATABASE maverick_agents;

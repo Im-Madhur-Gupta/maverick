@@ -1,0 +1,35 @@
+services:
+  backend:
+    container_name: maverick-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3001"
+    volumes:
+      - .:/usr/src/app
+    depends_on:
+      - postgres
+  
+  postgres:
+    container_name: maverick-postgres
+    image: postgres:16
+    restart: unless-stopped
+    ports:
+      - 5432:5432
+    env_file:
+      - .env
+    volumes:
+      - ${PWD}/db-data/:/var/lib/postgresql/data/
+      - ${PWD}/init.sql:/docker-entrypoint-initdb.d/init.sql
+  
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - 15433:80
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    volumes:
+      - ${PWD}/pgadmin-data/:/var/lib/pgadmin/
