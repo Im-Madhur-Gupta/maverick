@@ -1,24 +1,33 @@
-###################
-# PRODUCTION BUILD
-###################
-
-# Create a production image
+# Use the official Node.js image as the base image
 FROM node:20-alpine
 
-# Set the working directory
-WORKDIR /app
+# Set the working directory inside the container
+WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json
+# Install required dependencies for Prisma
+RUN apk add --no-cache openssl netcat-openbsd
+
+# Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
 
-# Install only production dependencies
-RUN yarn --production
+# TODO: We should generate the prisma client instead of copying it
+COPY prisma ./prisma/
 
-# Build the application
+# Install the application dependencies
+RUN yarn
+RUN yarn global add prisma
+
+# Copy the rest of the application files
+COPY . .
+
+# Build the NestJS application
 RUN yarn build
 
-# Copy the built application from the previous stage
-COPY /app/dist ./dist
+# Create start script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Command to run the app
-CMD ["node", "dist/main"]
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+# Command to run the application
+CMD ["node", "dist/src/main"]

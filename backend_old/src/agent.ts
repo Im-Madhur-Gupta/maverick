@@ -28,15 +28,6 @@ export class TradingAgent {
     return this.wallet.walletAddress();
   }
 
-  async initialize(personaId: AgentPersona): Promise<{
-    agentId: string;
-    evmAddress: string;
-    solAddress: string;
-  }> {
-    // Initialize Fere agent with persona-specific prompts
-    return this.wallet.initialize(personaId);
-  }
-
   // private getPersonaWeightedScore(
   //   tokenData: any,
   //   socialMetrics: any,

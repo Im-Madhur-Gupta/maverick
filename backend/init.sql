@@ -1,1 +1,1 @@
-CREATE DATABASE maverick_agents;
+CREATE DATABASE maverick_db;

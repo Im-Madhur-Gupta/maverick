@@ -7,9 +7,39 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Agents {
-  name    String @db.VarChar
-  id      String @id @db.Uuid
-  persona Int
-  socialIds String[]
+model Agent {
+  id           String    @id
+  name         String
+  description  String
+  persona      Int
+  ownerAddress String    @map("owner_address")
+  evmAddress   String    @map("evm_address")
+  solAddress   String    @map("sol_address")
+  isActive     Boolean   @default(true) @map("is_active")
+  holdings     Holding[]
+
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @default(now()) @map("updated_at")
+
+  @@map("agents")
+}
+
+model Coin {
+  id       Int       @id @default(autoincrement())
+  name     String
+  symbol   String
+  holdings Holding[]
+
+  @@map("coins")
+}
+
+model Holding {
+  agent    Agent @relation(fields: [agentId], references: [id])
+  agentId  String   @map("agent_id")
+  coin     Coin  @relation(fields: [coinId], references: [id])
+  coinId   Int   @map("coin_id")
+  amount   Int
+
+  @@id([agentId, coinId])
+  @@map("holdings")
 }
