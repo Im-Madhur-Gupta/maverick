@@ -4,6 +4,7 @@ import { LoggerService } from 'libs/logger/src';
 import { CreateFereAgentDto } from './dto/create-fere-agent.dto';
 import { CreateFereAgentResponse } from './types/create-fere-agent.interface';
 import { firstValueFrom } from 'rxjs';
+import { GetFereAgentHoldingsResponse } from './types/get-fere-agent-holdings.interface';
 
 @Injectable()
 export class FereService {
@@ -15,7 +16,13 @@ export class FereService {
     private readonly httpService: HttpService,
   ) {}
 
-  private getApiHeaders(): Record<string, string> {
+  private getReadApiHeaders(): Record<string, string> {
+    return {
+      'X-Fere-Userid': this.userId,
+    };
+  }
+
+  private getWriteApiHeaders(): Record<string, string> {
     return {
       'Content-Type': 'application/json',
       Accept: 'application/json',
@@ -55,7 +62,7 @@ export class FereService {
     try {
       const { data } = await firstValueFrom(
         this.httpService.put<CreateFereAgentResponse>(this.baseUrl, payload, {
-          headers: this.getApiHeaders(),
+          headers: this.getWriteApiHeaders(),
         }),
       );
       this.logger.info('Fere agent created', {
@@ -66,5 +73,15 @@ export class FereService {
       this.logger.error('Failed to create Fere agent', { error });
       throw error;
     }
+  }
+
+  async getHoldings(agentId: string): Promise<GetFereAgentHoldingsResponse> {
+    const url = `${this.baseUrl}/${agentId}/holdings/`;
+    const { data } = await firstValueFrom(
+      this.httpService.get<GetFereAgentHoldingsResponse>(url, {
+        headers: this.getReadApiHeaders(),
+      }),
+    );
+    return data;
   }
 }

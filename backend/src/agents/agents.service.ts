@@ -10,6 +10,8 @@ import { getPersonaStrings } from './utils/persona.utils';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { CreateAgentResponse } from './types/create-agent.interface';
 import { AgentPersona } from './types/agent-persona.enum';
+import { GetHoldingsResponse } from './types/get-holdings.interface';
+import { Omit } from 'lodash';
 
 @Injectable()
 export class AgentsService {
@@ -70,8 +72,11 @@ export class AgentsService {
         `Agent created with {id: ${agent.id}, name: ${agent.name}, persona: ${selectedPersona}, evmAddress: ${agent.evmAddress}, solAddress: ${agent.solAddress}, isActive: ${agent.isActive}, createdAt: ${agent.createdAt}}`,
       );
 
+      // TODO: Should be done at DB call level for all queries
+      const agentWithoutExternalId = Omit(agent, 'externalId');
+
       return {
-        ...agent,
+        ...agentWithoutExternalId,
         solPvtKey: fereAgent.sol_pvt_key,
         evmPvtKey: fereAgent.evm_pvt_key,
         mnemonic: fereAgent.mnemonic,
@@ -80,5 +85,18 @@ export class AgentsService {
       this.logger.error('Failed to create agent:', error);
       throw new InternalServerErrorException('Failed to create agent');
     }
+  }
+
+  async getHoldings(agentId: string): Promise<GetHoldingsResponse> {
+    const holdings = await this.prisma.holding.findMany({
+      where: { agentId },
+    });
+
+    // TODO: Should be done at DB call level for all queries
+    const holdingsWithoutExternalId = holdings.map((holding) =>
+      Omit(holding, 'externalId'),
+    );
+
+    return holdingsWithoutExternalId;
   }
 }
