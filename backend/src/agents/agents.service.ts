@@ -55,7 +55,7 @@ export class AgentsService {
       // Create agent in database
       const agent = await this.prisma.agent.create({
         data: {
-          id: fereAgent.id,
+          externalId: fereAgent.id,
           name,
           description,
           persona: selectedPersona,
@@ -67,7 +67,7 @@ export class AgentsService {
       });
 
       this.logger.info(
-        `Agent created with {id: ${agent.id}, name: ${agent.name}, persona: ${selectedPersona}, evmAddress: ${agent.evmAddress}, solAddress: ${agent.solAddress}, isActive: ${agent.isActive}, createdAt: ${agent.createdAt}, updatedAt: ${agent.updatedAt}}`,
+        `Agent created with {id: ${agent.id}, name: ${agent.name}, persona: ${selectedPersona}, evmAddress: ${agent.evmAddress}, solAddress: ${agent.solAddress}, isActive: ${agent.isActive}, createdAt: ${agent.createdAt}}`,
       );
 
       return {
