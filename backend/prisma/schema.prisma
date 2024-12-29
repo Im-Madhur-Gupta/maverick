@@ -8,7 +8,8 @@ datasource db {
 }
 
 model Agent {
-  id           String    @id
+  id           String    @id @default(uuid())
+  externalId   String    @unique @map("external_id") // To store FereAI's agent ID
   name         String
   description  String
   persona      Int
@@ -19,26 +20,43 @@ model Agent {
   holdings     Holding[]
 
   createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @default(now()) @map("updated_at")
 
   @@map("agents")
 }
 
 model Coin {
-  id       Int       @id @default(autoincrement())
-  name     String
-  symbol   String
+  id          String @id @default(uuid())
+  tokenName   String @map("token_name")
+  poolName    String @map("pool_name")
+  baseAddress String @unique @map("base_address")
+  poolAddress String @map("pool_address")
+  decimals    Int    @map("decimals")
+
   holdings Holding[]
 
   @@map("coins")
 }
 
 model Holding {
+  externalId String @unique @map("external_id") // To store FereAI's holding ID
+
   agent    Agent @relation(fields: [agentId], references: [id])
   agentId  String   @map("agent_id")
+
   coin     Coin  @relation(fields: [coinId], references: [id])
-  coinId   Int   @map("coin_id")
-  amount   Int
+  coinId   String   @map("coin_id")
+  
+  boughtAt DateTime @map("bought_at")
+  tokensBought Int @map("tokens_bought")
+  buyingPriceUsd Float @map("buying_price_usd")
+  currPriceUsd Float @map("curr_price_usd")
+  profitAbsUsd Float @map("profit_abs_usd")
+  profitPerUsd Float @map("profit_per_usd")
+  isActive Boolean @map("is_active")
+  dryRun Boolean @map("dry_run")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@id([agentId, coinId])
   @@map("holdings")
