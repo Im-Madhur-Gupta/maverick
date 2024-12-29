@@ -1,8 +1,11 @@
 #!/bin/sh
 
+# Extract host from DATABASE_URL
+DB_HOST=$(echo $DATABASE_URL | sed -n 's|.*//.*@\(.*\):.*|\1|p')
+
 # Wait for postgres
-echo "Waiting for postgres..."
-while ! nc -z postgres 5432; do
+echo "Waiting for postgres at $DB_HOST..."
+while ! nc -z $DB_HOST 5432; do
   sleep 1
 done
 echo "PostgreSQL started"
