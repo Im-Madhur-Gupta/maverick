@@ -1,11 +1,14 @@
 # MemeCoin Maverick
 
 <div align="center">
-    <img src="https://github.com/user-attachments/assets/d58f2f74-a509-4e99-8428-6dea918a7826" alt="Logo" height="250">
+    <img src="https://github.com/user-attachments/assets/d58f2f74-a509-4e99-8428-6dea918a7826" alt="Logo" height="250"/>
 </div>
 
 ### **Overview**  
 **MemeCoin Maverick** is an AI agent that autonomously trades meme coins for you based on your preferences and insights from top traders. Built to simplify meme coin trading, the agent leverages real-time onchain and social data for intelligent, automated decision-making.  
+
+**Frontend**: [memecoin-maverick.vercel.app](https://memecoin-maverick.vercel.app/) [WIP] <br/>
+**API Docs**: [maverick-backend.onrender.com/api](https://maverick-backend.onrender.com/api)
 
 ---  
 
@@ -23,39 +26,40 @@ MemeCoin Maverick automates the trading process by:
 ---  
 
 ### **Tech Stack**  
+- **Frontend**:
+  - TypeScript
+  - Next.js
+- **Backend**:
+  - TypeScript
+  - NestJS
+  - PostgreSQL
 - **AI**:  
-  - LLMs for sentiment analysis, trend prediction, and decision-making (WIP).  
-- **Blockchain**:  
-  - **Wallet**: Coinbase MPC Wallet for secure, autonomous transactions.  
+  - LLMs for trend prediction, and decision-making (WIP).  
+- **Blockchain**:
   - **Agent**: Leveraging the 0xDisciple agent from FereAI for autonomous trading.  
 
 ---  
 
-### **Features**  
-- Fully autonomous AI trading agent.  
-- Integration with Coinbase MPC Wallet for secure crypto handling.  
-- Easy customization of trading strategies using trusted trader inputs.  
-
----  
-
 ### **Current Progress**  
-1. Created a 0xDisciple agent with selectable personas:  
+1. Created an agent with selectable personas:  
    - `MOON_CHASER`: Focuses on short-term gains from meme coins with high volatility.  
    - `MEME_LORD`: Prioritizes meme popularity on Farcaster.  
-   - `WHALE_WATCHER`: Tracks and mimics strategies of large traders.  
-2. Integrated Farcaster data to:  
-   - Analyze coin popularity and generate trading signals (BUY, SELL, HOLD).  
-   - Execute SELL signals using the Fere create trade API.  
-3. Added functionality to fetch data from top traders on Farcaster:  
-   - Analyzes their promoted coins and generates relevant trading signals.  
-4. Persona selection influences how the agent weighs social and trader-based signals. For example, `MEME_LORD` gives more emphasis to meme popularity than trader insights.  
+   - `WHALE_WATCHER`: Tracks and mimics strategies of large traders.
 
 ---  
 
-### **Future Plans**  
-- [ ] [WIP] Fix issues with the `create` call, especially formatting of `decision_prompt_pool` and `decision_prompt_portfolio`.  
-- [ ] [WIP] Build a frontend for better user interaction (an initial version is in place).  
-- [ ] Integrate the BUY API when it becomes available.  
+### **TODOs**  
+- [x] Fix issues with the `create` call, especially formatting of `decision_prompt_pool` and `decision_prompt_portfolio`.  
+- [ ] [WIP] Migrate the backend to NestJS and PostgreSQL
+    - [ ] [WIP] Real-time agent holdings tracker via CRON/WebSocket
+    - [ ] Analyze Farcaster posts tokens under holdings to generate trading signals for respective agents
+    - [ ] Add get portfolio API
+- [ ] Persona selection should influence how the agent weighs social signals. For example, `MEME_LORD` gives more emphasis on meme popularity. 
+- [ ] Integrate create agent and get holdings on the frontend.
+- [ ] KOL signal integration
+    1. Fetch and analyze posts from user-supplied KOL handles
+    2. Generate trading signals based on KOL discussions for both portfolio and potential coins
+- [ ] Integrate the BUY API when it's available.  
 - [ ] [LONG TERM] Generalize the agent for all types of crypto trading, beyond meme coins.  
 
 ---  
