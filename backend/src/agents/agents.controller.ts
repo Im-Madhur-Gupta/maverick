@@ -1,16 +1,40 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiBody, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { AgentsService } from './agents.service';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { CreateAgentResponse } from './types/create-agent.interface';
 import { GetHoldingsResponse } from './types/get-holdings.interface';
+import {
+  createAgentExample,
+  createAgentResponseExample,
+} from './swagger/create-agent-example';
+import { getHoldingsResponseExample } from './swagger/get-holdings-example';
 
 @Controller('agents')
 export class AgentsController {
   constructor(private readonly agentsService: AgentsService) {}
 
   @Post('/create')
-  @ApiOperation({ summary: 'Create a new trading agent' })
+  @ApiOperation({
+    summary: 'Create a new trading agent',
+  })
+  @ApiBody({
+    type: CreateAgentDto,
+    examples: {
+      example: {
+        value: createAgentExample,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Agent created successfully',
+    content: {
+      'application/json': {
+        example: createAgentResponseExample,
+      },
+    },
+  })
   createAgent(
     @Body() createAgentDto: CreateAgentDto,
   ): Promise<CreateAgentResponse> {
@@ -18,7 +42,23 @@ export class AgentsController {
   }
 
   @Get('/:agentId/holdings')
-  @ApiOperation({ summary: 'Get holdings for a given agent' })
+  @ApiOperation({
+    summary: 'Get holdings for a given agent',
+  })
+  @ApiParam({
+    name: 'agentId',
+    description: 'Unique identifier of the agent',
+    example: 'agent_123456',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Holdings retrieved successfully',
+    content: {
+      'application/json': {
+        example: getHoldingsResponseExample,
+      },
+    },
+  })
   async getHoldings(
     @Param('agentId') agentId: string,
   ): Promise<GetHoldingsResponse> {
