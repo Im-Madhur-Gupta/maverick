@@ -21,6 +21,13 @@ export class AgentsService {
     private readonly fereService: FereService,
   ) {}
 
+  /**
+   * Creates a new agent.
+   * @param createAgentDto - The data transfer object containing agent details.
+   * @returns A promise that resolves to the created agent's response.
+   * @throws BadRequestException if the persona is invalid.
+   * @throws InternalServerErrorException if agent creation fails.
+   */
   async createAgent(
     createAgentDto: CreateAgentDto,
   ): Promise<CreateAgentResponse> {
@@ -87,6 +94,11 @@ export class AgentsService {
     }
   }
 
+  /**
+   * Retrieves holdings for a given agent.
+   * @param agentId - The unique identifier of the agent.
+   * @returns A promise that resolves to the agent's holdings.
+   */
   async getHoldings(agentId: string): Promise<GetHoldingsResponse> {
     const holdings = await this.prisma.holding.findMany({
       where: { agentId },
