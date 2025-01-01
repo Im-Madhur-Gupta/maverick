@@ -7,8 +7,8 @@
 ### **Overview**  
 **MemeCoin Maverick** is an AI agent that autonomously trades meme coins for you based on your preferences and insights from top traders. Built to simplify meme coin trading, the agent leverages real-time onchain and social data for intelligent, automated decision-making.  
 
-**Frontend**: [memecoin-maverick.vercel.app](https://memecoin-maverick.vercel.app/) [WIP] <br/>
-**API Docs**: [maverick-backend.onrender.com/api](https://maverick-backend.onrender.com/api)
+**API Docs**: [maverick-backend.onrender.com/api](https://maverick-backend.onrender.com/api) <br/>
+**Frontend**: [memecoin-maverick.vercel.app](https://memecoin-maverick.vercel.app/) [WIP]
 
 ---  
 
@@ -21,7 +21,7 @@ Meme coin trading is highly volatile and hype-driven, often influenced by social
 MemeCoin Maverick automates the trading process by:  
 - Using AI to analyze market sentiment and trends.  
 - Following strategies of trusted traders via their blockchain addresses or Farcaster handles.  
-- Executing trades on your behalf based on pre-set criteria.  
+- Executing trades for you based on pre-set criteria.  
 
 ---  
 
@@ -33,6 +33,7 @@ MemeCoin Maverick automates the trading process by:
   - TypeScript
   - NestJS
   - PostgreSQL
+  - Docker
 - **AI**:  
   - LLMs for trend prediction, and decision-making (WIP).  
 - **Blockchain**:
@@ -41,18 +42,20 @@ MemeCoin Maverick automates the trading process by:
 ---  
 
 ### **Current Progress**  
+#### Backend
 1. Created an agent with selectable personas:  
    - `MOON_CHASER`: Focuses on short-term gains from meme coins with high volatility.  
    - `MEME_LORD`: Prioritizes meme popularity on Farcaster.  
    - `WHALE_WATCHER`: Tracks and mimics strategies of large traders.
+2. Fetch current holdings of an agent
 
 ---  
 
 ### **TODOs**  
 - [x] Fix issues with the `create` call, especially formatting of `decision_prompt_pool` and `decision_prompt_portfolio`.  
 - [ ] [WIP] Migrate the backend to NestJS and PostgreSQL
-    - [ ] [WIP] Real-time agent holdings tracker via CRON/WebSocket
-    - [ ] Analyze Farcaster posts tokens under holdings to generate trading signals for respective agents
+    - [x] Real-time agent holdings tracker via CRON job
+    - [ ] [WIP] Analyze Farcaster posts tokens under holdings to generate trading signals for respective agents
     - [ ] Add get portfolio API
 - [ ] Persona selection should influence how the agent weighs social signals. For example, `MEME_LORD` gives more emphasis on meme popularity. 
 - [ ] Integrate create agent and get holdings on the frontend.
