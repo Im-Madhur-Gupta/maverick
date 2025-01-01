@@ -16,8 +16,16 @@ export class CronService {
     private readonly logger: LoggerService,
   ) {}
 
+  /**
+   * Synchronizes holdings data for all active agents in the DB.
+   * This method runs automatically every 5 minutes.
+   *
+   * The synchronization process:
+   * 1. Fetches all active agents from the database
+   * 2. Processes each agent's holdings in parallel, with rate limiting to prevent API overload
+   */
   @Cron(CronExpression.EVERY_5_MINUTES)
-  async syncAgentHoldings() {
+  async syncAllAgentHoldings() {
     try {
       this.logger.info('Syncing agent holdings');
 
@@ -33,10 +41,11 @@ export class CronService {
       });
 
       const limit = pLimit(FERE_MAX_CONCURRENT_API_CALLS);
+
       // Sync holdings for each agent
       await Promise.all(
         agents.map(async (agent) =>
-          limit(async () => this.syncAgentHolding(agent)),
+          limit(async () => this.syncAgentHoldings(agent)),
         ),
       );
 
@@ -46,7 +55,19 @@ export class CronService {
     }
   }
 
-  private async syncAgentHolding(agent: SyncAgentHoldingDto) {
+  /**
+   * Synchronizes holdings data for a single agent.
+   * This method handles the complete synchronization for one agent:
+   * 1. Fetches current holdings from the Fere service
+   * 2. Updates both coin and holding records in a single transaction
+   *
+   * @param agent - The agent to sync holdings for
+   * @param agent.id - The internal database ID of the agent
+   * @param agent.externalId - The ID used to identify the agent in the Fere system
+   *
+   * @throws May throw errors from database operations or external API calls
+   */
+  private async syncAgentHoldings(agent: SyncAgentHoldingDto) {
     const { id: agentId, externalId: agentExternalId } = agent;
 
     this.logger.info(`Syncing holdings for agent ${agentId}`);
