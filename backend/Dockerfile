@@ -5,10 +5,10 @@ FROM node:20-alpine
 WORKDIR /usr/src/app
 
 # Install required dependencies for Prisma
-RUN apk add --no-cache openssl netcat-openbsd
+RUN apk add --no-cache openssl
 
-# Copy package.json and package-lock.json to the working directory
-COPY package*.json ./
+# Copy package.json and yarn.lock to the working directory
+COPY package.json yarn.lock ./
 
 # TODO: We should generate the prisma client instead of copying it
 COPY prisma ./prisma/
@@ -23,11 +23,11 @@ COPY . .
 # Build the NestJS application
 RUN yarn build
 
-# Create start script
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Expose the port the app runs on
+EXPOSE 3000
 
-ENTRYPOINT ["docker-entrypoint.sh"]
+# Run prisma migrations
+RUN prisma migrate deploy
 
 # Command to run the application
 CMD ["node", "dist/src/main"]
