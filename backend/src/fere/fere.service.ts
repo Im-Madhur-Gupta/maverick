@@ -8,7 +8,7 @@ import { GetFereAgentHoldingsResponse } from './types/get-fere-agent-holdings.in
 
 @Injectable()
 export class FereService {
-  private readonly baseUrl: string = 'https://api.fereai.xyz/ta/agent/';
+  private readonly baseUrl: string = 'https://api.fereai.xyz/ta/agent';
   private readonly userId: string = process.env.FERE_USER_ID;
 
   constructor(
@@ -16,13 +16,7 @@ export class FereService {
     private readonly httpService: HttpService,
   ) {}
 
-  private getReadApiHeaders(): Record<string, string> {
-    return {
-      'X-Fere-Userid': this.userId,
-    };
-  }
-
-  private getWriteApiHeaders(): Record<string, string> {
+  private getApiHeaders(): Record<string, string> {
     return {
       'Content-Type': 'application/json',
       Accept: 'application/json',
@@ -62,7 +56,7 @@ export class FereService {
     try {
       const { data } = await firstValueFrom(
         this.httpService.put<CreateFereAgentResponse>(this.baseUrl, payload, {
-          headers: this.getWriteApiHeaders(),
+          headers: this.getApiHeaders(),
         }),
       );
       this.logger.info('Fere agent created', {
@@ -79,7 +73,7 @@ export class FereService {
     const url = `${this.baseUrl}/${agentId}/holdings/`;
     const { data } = await firstValueFrom(
       this.httpService.get<GetFereAgentHoldingsResponse>(url, {
-        headers: this.getReadApiHeaders(),
+        headers: this.getApiHeaders(),
       }),
     );
     return data;

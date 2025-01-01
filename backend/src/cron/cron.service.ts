@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CronExpression } from '@nestjs/schedule';
 import { Cron } from '@nestjs/schedule';
-import pLimit from 'p-limit';
+import * as pLimit from 'p-limit';
 import { LoggerService } from 'libs/logger/src';
 import { PrismaService } from 'libs/prisma/src';
 import { FERE_MAX_CONCURRENT_API_CALLS } from 'src/fere/constants/fere.constants';
