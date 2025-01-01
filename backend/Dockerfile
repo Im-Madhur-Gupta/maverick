@@ -26,8 +26,10 @@ RUN yarn build
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Run prisma migrations
-RUN prisma migrate deploy
+# Copy and set the entrypoint script for DB migrations
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["docker-entrypoint.sh"]
 
 # Command to run the application
 CMD ["node", "dist/src/main"]
