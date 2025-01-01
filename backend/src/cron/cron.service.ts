@@ -6,7 +6,7 @@ import { LoggerService } from 'libs/logger/src';
 import { PrismaService } from 'libs/prisma/src';
 import { FERE_MAX_CONCURRENT_API_CALLS } from 'src/fere/constants/fere.constants';
 import { FereService } from 'src/fere/fere.service';
-import { SyncAgentHoldingDto } from './dto/sync-agent-holding.dto';
+import { SyncAgentHoldingsDto } from './dto/sync-agent-holding.dto';
 
 @Injectable()
 export class CronService {
@@ -67,7 +67,7 @@ export class CronService {
    *
    * @throws May throw errors from database operations or external API calls
    */
-  private async syncAgentHoldings(agent: SyncAgentHoldingDto) {
+  private async syncAgentHoldings(agent: SyncAgentHoldingsDto) {
     const { id: agentId, externalId: agentExternalId } = agent;
 
     this.logger.info(`Syncing holdings for agent ${agentId}`);

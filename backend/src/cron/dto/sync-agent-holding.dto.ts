@@ -1,4 +1,4 @@
-export class SyncAgentHoldingDto {
+export class SyncAgentHoldingsDto {
   id: string;
   externalId: string;
 }
