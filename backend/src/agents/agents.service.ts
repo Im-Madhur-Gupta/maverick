@@ -1,7 +1,7 @@
 import {
-  BadRequestException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { LoggerService } from 'libs/logger/src';
 import { PrismaService } from 'libs/prisma/src';
@@ -9,7 +9,6 @@ import { FereService } from '../fere/fere.service';
 import { getPersonaStrings } from './utils';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { CreateAgentResponse } from './types/create-agent.interface';
-import { AgentPersona } from './types/agent-persona.enum';
 import { GetHoldingsResponse } from './types/get-holdings.interface';
 
 @Injectable()
@@ -26,13 +25,35 @@ export class AgentsService {
    * @returns A promise that resolves to the agent's holdings.
    */
   async getHoldings(agentId: string): Promise<GetHoldingsResponse> {
-    const holdings = await this.prisma.holding.findMany({
-      where: { agentId },
-      omit: {
-        externalId: true,
-      },
-    });
-    return holdings;
+    try {
+      const agent = await this.prisma.agent.findUnique({
+        where: { id: agentId },
+      });
+
+      // Check if agent exists
+      if (!agent) {
+        throw new NotFoundException(`Agent with id ${agentId} not found`);
+      }
+
+      // Get holdings for agent
+      const holdings = await this.prisma.holding.findMany({
+        where: { agentId },
+        include: { coin: true },
+        omit: { externalId: true },
+      });
+
+      this.logger.info('Agent holdings fetched', { agentId, holdings });
+      return holdings;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
+      this.logger.error('Failed to get agent holdings', { agentId, error });
+      throw new InternalServerErrorException('Failed to fetch holdings', {
+        cause: error,
+      });
+    }
   }
 
   /**
@@ -45,28 +66,17 @@ export class AgentsService {
   async createAgent(
     createAgentDto: CreateAgentDto,
   ): Promise<CreateAgentResponse> {
+    const {
+      name,
+      description,
+      persona: selectedPersona,
+      ownerAddress,
+    } = createAgentDto;
+
     try {
-      const {
-        name,
-        description,
-        persona: selectedPersona,
-        ownerAddress,
-      } = createAgentDto;
-
-      if (
-        selectedPersona === undefined ||
-        !Object.values(AgentPersona).includes(selectedPersona)
-      ) {
-        throw new BadRequestException(
-          'Invalid personaId. Must be 0 (MOON_CHASER), 1 (MEME_LORD), or 2 (WHALE_WATCHER)',
-        );
-      }
-
-      // Get persona strings
       const { personaPrompt, decisionPromptPool, decisionPromptPortfolio } =
         getPersonaStrings(selectedPersona);
 
-      // Create disciple agent via Fere API
       const fereAgent = await this.fereService.createAgent({
         name,
         description,
@@ -75,7 +85,6 @@ export class AgentsService {
         decisionPromptPortfolio,
       });
 
-      // Create agent in database
       const agent = await this.prisma.agent.create({
         data: {
           externalId: fereAgent.id,
@@ -87,15 +96,14 @@ export class AgentsService {
           solAddress: fereAgent.sol_address,
           isActive: fereAgent.is_active,
         },
-        omit: {
-          externalId: true,
-        },
+        omit: { externalId: true },
       });
 
-      this.logger.info(
-        `Agent created with {id: ${agent.id}, name: ${agent.name}, persona: ${selectedPersona}, evmAddress: ${agent.evmAddress}, solAddress: ${agent.solAddress}, isActive: ${agent.isActive}, createdAt: ${agent.createdAt}}`,
-      );
-
+      this.logger.info('Agent created successfully', {
+        agentId: agent.id,
+        name: agent.name,
+        persona: selectedPersona,
+      });
       return {
         ...agent,
         solPvtKey: fereAgent.sol_pvt_key,
@@ -103,8 +111,13 @@ export class AgentsService {
         mnemonic: fereAgent.mnemonic,
       };
     } catch (error) {
-      this.logger.error('Failed to create agent:', error);
-      throw new InternalServerErrorException('Failed to create agent');
+      this.logger.error('Failed to create agent', {
+        error,
+        dto: createAgentDto,
+      });
+      throw new InternalServerErrorException('Failed to create agent', {
+        cause: error,
+      });
     }
   }
 }
