@@ -5,11 +5,13 @@ import { PrismaModule } from 'libs/prisma/src';
 import { LoggerModule } from 'libs/logger/src';
 import { AgentsModule } from './agents/agents.module';
 import { CronModule } from './cron/cron.module';
+import { validateEnv } from './common/config/env.validation';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validate: validateEnv,
     }),
     ScheduleModule.forRoot(),
     PrismaModule,

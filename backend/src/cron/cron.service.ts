@@ -4,7 +4,7 @@ import { Cron } from '@nestjs/schedule';
 import * as pLimit from 'p-limit';
 import { LoggerService } from 'libs/logger/src';
 import { PrismaService } from 'libs/prisma/src';
-import { FERE_MAX_CONCURRENT_API_CALLS } from 'src/fere/constants/fere.constants';
+import { FERE_MAX_CONCURRENT_API_CALLS } from 'src/fere/constants';
 import { FereService } from 'src/fere/fere.service';
 import { SyncAgentHoldingsDto } from './dto/sync-agent-holding.dto';
 

@@ -1,4 +1,4 @@
-import { PERSONA_PROMPTS } from '../constants/persona-prompts.constants';
+import { PERSONA_PROMPTS } from '../constants';
 import { AgentPersona } from '../types/agent-persona.enum';
 
 export function getPersonaStrings(selectedPersona: AgentPersona): {

@@ -6,7 +6,7 @@ import {
 import { LoggerService } from 'libs/logger/src';
 import { PrismaService } from 'libs/prisma/src';
 import { FereService } from '../fere/fere.service';
-import { getPersonaStrings } from './utils/persona.utils';
+import { getPersonaStrings } from './utils';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { CreateAgentResponse } from './types/create-agent.interface';
 import { AgentPersona } from './types/agent-persona.enum';
@@ -19,6 +19,21 @@ export class AgentsService {
     private readonly logger: LoggerService,
     private readonly fereService: FereService,
   ) {}
+
+  /**
+   * Retrieves holdings for a given agent.
+   * @param agentId - The unique identifier of the agent.
+   * @returns A promise that resolves to the agent's holdings.
+   */
+  async getHoldings(agentId: string): Promise<GetHoldingsResponse> {
+    const holdings = await this.prisma.holding.findMany({
+      where: { agentId },
+      omit: {
+        externalId: true,
+      },
+    });
+    return holdings;
+  }
 
   /**
    * Creates a new agent.
@@ -91,20 +106,5 @@ export class AgentsService {
       this.logger.error('Failed to create agent:', error);
       throw new InternalServerErrorException('Failed to create agent');
     }
-  }
-
-  /**
-   * Retrieves holdings for a given agent.
-   * @param agentId - The unique identifier of the agent.
-   * @returns A promise that resolves to the agent's holdings.
-   */
-  async getHoldings(agentId: string): Promise<GetHoldingsResponse> {
-    const holdings = await this.prisma.holding.findMany({
-      where: { agentId },
-      omit: {
-        externalId: true,
-      },
-    });
-    return holdings;
   }
 }

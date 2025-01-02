@@ -1,4 +1,4 @@
-import { IsString, IsIn, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum } from 'class-validator';
 import { AgentPersona } from '../types/agent-persona.enum';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -14,11 +14,7 @@ export class CreateAgentDto {
   description: string;
 
   @ApiProperty({ description: 'Persona of the agent', enum: AgentPersona })
-  @IsIn([
-    AgentPersona.MOON_CHASER,
-    AgentPersona.MEME_LORD,
-    AgentPersona.WHALE_WATCHER,
-  ])
+  @IsEnum(AgentPersona)
   persona: AgentPersona;
 
   @ApiProperty({ description: 'Owner address of the agent' })

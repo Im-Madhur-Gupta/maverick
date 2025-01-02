@@ -5,24 +5,35 @@ import { CreateFereAgentDto } from './dto/create-fere-agent.dto';
 import { CreateFereAgentResponse } from './types/create-fere-agent.interface';
 import { firstValueFrom } from 'rxjs';
 import { GetFereAgentHoldingsResponse } from './types/get-fere-agent-holdings.interface';
+import { ConfigService } from '@nestjs/config';
+import { FERE_CONFIG_KEYS } from './config';
+import { FERE_API_BASE_URL } from './constants';
+import { COMMON_CONFIG_KEYS } from 'src/common/config';
 
 @Injectable()
 export class FereService {
-  private readonly baseUrl: string = 'https://api.fereai.xyz/ta/agent';
-  private readonly userId: string = process.env.FERE_USER_ID;
-
+  private readonly baseUrl: string = FERE_API_BASE_URL;
+  private readonly apiKey: string;
+  private readonly userId: string;
+  private readonly originUrl: string;
   constructor(
     private readonly logger: LoggerService,
     private readonly httpService: HttpService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.userId = this.configService.get(FERE_CONFIG_KEYS.USER_ID);
+    this.apiKey = this.configService.get(FERE_CONFIG_KEYS.API_KEY);
+    this.originUrl =
+      this.configService.get(COMMON_CONFIG_KEYS.ORIGIN_URL) || 'localhost:3000';
+  }
 
   private getApiHeaders(): Record<string, string> {
     return {
       'Content-Type': 'application/json',
       Accept: 'application/json',
-      'X-FRIDAY-KEY': process.env.FERE_API_KEY,
+      'X-FRIDAY-KEY': this.apiKey,
       'X-Fere-Userid': this.userId,
-      Origin: process.env.FRONTEND_URL || 'localhost:3000',
+      Origin: this.originUrl,
     };
   }
 

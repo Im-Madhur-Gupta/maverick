@@ -14,6 +14,30 @@ import { getHoldingsResponseExample } from './swagger/get-holdings-example';
 export class AgentsController {
   constructor(private readonly agentsService: AgentsService) {}
 
+  @Get('/:agentId/holdings')
+  @ApiOperation({
+    summary: 'Get holdings for a given agent',
+  })
+  @ApiParam({
+    name: 'agentId',
+    description: 'Unique identifier of the agent',
+    example: 'agent_123456',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Holdings retrieved successfully',
+    content: {
+      'application/json': {
+        example: getHoldingsResponseExample,
+      },
+    },
+  })
+  async getHoldings(
+    @Param('agentId') agentId: string,
+  ): Promise<GetHoldingsResponse> {
+    return this.agentsService.getHoldings(agentId);
+  }
+
   @Post('/create')
   @ApiOperation({
     summary: 'Create a new trading agent',
@@ -39,29 +63,5 @@ export class AgentsController {
     @Body() createAgentDto: CreateAgentDto,
   ): Promise<CreateAgentResponse> {
     return this.agentsService.createAgent(createAgentDto);
-  }
-
-  @Get('/:agentId/holdings')
-  @ApiOperation({
-    summary: 'Get holdings for a given agent',
-  })
-  @ApiParam({
-    name: 'agentId',
-    description: 'Unique identifier of the agent',
-    example: 'agent_123456',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Holdings retrieved successfully',
-    content: {
-      'application/json': {
-        example: getHoldingsResponseExample,
-      },
-    },
-  })
-  async getHoldings(
-    @Param('agentId') agentId: string,
-  ): Promise<GetHoldingsResponse> {
-    return this.agentsService.getHoldings(agentId);
   }
 }

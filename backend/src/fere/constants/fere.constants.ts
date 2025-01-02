@@ -1,1 +1,0 @@
-export const FERE_MAX_CONCURRENT_API_CALLS = 5;

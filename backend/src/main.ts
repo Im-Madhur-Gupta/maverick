@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { ConfigService } from '@nestjs/config';
+import { COMMON_CONFIG_KEYS } from './common/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -20,6 +22,11 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
-  await app.listen(process.env.PORT ?? 3000);
+  // Fetch port from config
+  const configService = app.get(ConfigService);
+  const port = configService.get(COMMON_CONFIG_KEYS.PORT);
+
+  // Start server
+  await app.listen(port || 3000);
 }
 bootstrap();
