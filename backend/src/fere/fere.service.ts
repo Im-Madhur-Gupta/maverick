@@ -40,39 +40,42 @@ export class FereService {
   async createAgent(
     createFereAgentDto: CreateFereAgentDto,
   ): Promise<CreateFereAgentResponse> {
-    const {
-      name,
-      description,
-      personaPrompt,
-      decisionPromptPool,
-      decisionPromptPortfolio,
-    } = createFereAgentDto;
-
-    const payload = {
-      user_id: this.userId,
-      name,
-      description,
-      persona: personaPrompt,
-      data_source: 'trending',
-      decision_prompt_pool: decisionPromptPool,
-      decision_prompt_portfolio: decisionPromptPortfolio,
-      dry_run: true,
-      dry_run_initial_usd: 1000,
-      max_investment_per_session: 0.2,
-      stop_loss: 0.5,
-      trailing_stop_loss: 0.3,
-      take_profit: 1.0,
-    };
-
     try {
+      const {
+        name,
+        description,
+        personaPrompt,
+        decisionPromptPool,
+        decisionPromptPortfolio,
+      } = createFereAgentDto;
+
+      const payload = {
+        user_id: this.userId,
+        name,
+        description,
+        persona: personaPrompt,
+        data_source: 'trending',
+        decision_prompt_pool: decisionPromptPool,
+        decision_prompt_portfolio: decisionPromptPortfolio,
+        dry_run: true,
+        dry_run_initial_usd: 1000,
+        max_investment_per_session: 0.2,
+        stop_loss: 0.5,
+        trailing_stop_loss: 0.3,
+        take_profit: 1.0,
+      };
+
+      const url = `${this.baseUrl}/agent/`;
       const { data } = await firstValueFrom(
-        this.httpService.put<CreateFereAgentResponse>(this.baseUrl, payload, {
+        this.httpService.put<CreateFereAgentResponse>(url, payload, {
           headers: this.getApiHeaders(),
         }),
       );
+
       this.logger.info('Fere agent created', {
         id: data.id,
       });
+
       return data;
     } catch (error) {
       this.logger.error('Failed to create Fere agent', { error });
@@ -81,12 +84,21 @@ export class FereService {
   }
 
   async getHoldings(agentId: string): Promise<GetFereAgentHoldingsResponse> {
-    const url = `${this.baseUrl}/${agentId}/holdings/`;
-    const { data } = await firstValueFrom(
-      this.httpService.get<GetFereAgentHoldingsResponse>(url, {
-        headers: this.getApiHeaders(),
-      }),
-    );
-    return data;
+    try {
+      const url = `${this.baseUrl}/agent/${agentId}/holdings/`;
+      const { data } = await firstValueFrom(
+        this.httpService.get<GetFereAgentHoldingsResponse>(url, {
+          headers: this.getApiHeaders(),
+        }),
+      );
+
+      return data;
+    } catch (error) {
+      this.logger.error('Failed to get Fere agent holdings', {
+        agentId,
+        error,
+      });
+      throw error;
+    }
   }
 }
