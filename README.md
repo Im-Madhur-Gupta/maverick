@@ -43,7 +43,7 @@ MemeCoin Maverick automates the trading process by:
 
 ### **Current Progress**  
 #### Backend
-1. Created an agent with selectable personas:  
+1. Create an agent with selectable personas:  
    - `MOON_CHASER`: Focuses on short-term gains from meme coins with high volatility.  
    - `MEME_LORD`: Prioritizes meme popularity on Farcaster.  
    - `WHALE_WATCHER`: Tracks and mimics strategies of large traders.
