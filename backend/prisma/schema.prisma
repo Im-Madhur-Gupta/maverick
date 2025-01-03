@@ -8,25 +8,50 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id Int @id @default(autoincrement())
+  solanaAddress String @unique @map("solana_address")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  nonces Nonce[]
+  agents Agent[]
+
+  @@map("users")
+}
+
+model Nonce {
+  id Int @id @default(autoincrement())
+  value String @map("value")
+  expiresAt DateTime @map("expires_at")
+  usedAt DateTime? @map("used_at")
+
+  userId Int @map("user_id")
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("nonces")
+}
+
 model Agent {
   id           String    @id @default(uuid())
   externalId   String    @unique @map("external_id") // To store FereAI's agent ID
   name         String
   description  String
   persona      Int
-  ownerAddress String    @map("owner_address")
   evmAddress   String    @map("evm_address")
   solAddress   String    @map("sol_address")
   isActive     Boolean   @default(true) @map("is_active")
   holdings     Holding[]
-
   createdAt    DateTime  @default(now()) @map("created_at")
+
+  ownerId       Int       @map("owner_id")
+  owner         User      @relation(fields: [ownerId], references: [id])
 
   @@map("agents")
 }
 
 model Coin {
-  id          String @id @default(uuid())
+  id          Int    @id @default(autoincrement())
   tokenName   String @map("token_name")
   poolName    String @map("pool_name")
   baseAddress String @unique @map("base_address")
@@ -41,11 +66,11 @@ model Coin {
 model Holding {
   externalId String @unique @map("external_id") // To store FereAI's holding ID
 
-  agent    Agent @relation(fields: [agentId], references: [id])
   agentId  String   @map("agent_id")
+  agent    Agent @relation(fields: [agentId], references: [id])
 
+  coinId   Int   @map("coin_id")
   coin     Coin  @relation(fields: [coinId], references: [id])
-  coinId   String   @map("coin_id")
   
   boughtAt DateTime @map("bought_at")
   tokensBought Int @map("tokens_bought")
