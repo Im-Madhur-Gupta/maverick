@@ -5,7 +5,7 @@ import { CreateAgentDto } from './dto/create-agent.dto';
 import { CreateAgentResponse } from './types/create-agent.interface';
 import { GetHoldingsResponse } from './types/get-holdings.interface';
 import {
-  createAgentExample,
+  createAgentDtoExample,
   createAgentResponseExample,
 } from './swagger/create-agent-example';
 import { getHoldingsResponseExample } from './swagger/get-holdings-example';
@@ -46,7 +46,7 @@ export class AgentsController {
     type: CreateAgentDto,
     examples: {
       example: {
-        value: createAgentExample,
+        value: createAgentDtoExample,
       },
     },
   })

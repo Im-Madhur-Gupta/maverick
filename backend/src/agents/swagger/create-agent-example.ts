@@ -2,7 +2,7 @@ import { AgentPersona } from '../types/agent-persona.enum';
 import { CreateAgentDto } from '../dto/create-agent.dto';
 import { CreateAgentResponse } from '../types/create-agent.interface';
 
-export const createAgentExample: CreateAgentDto = {
+export const createAgentDtoExample: CreateAgentDto = {
   name: 'MoonBot',
   description: 'A bot that chases moon shots',
   persona: AgentPersona.MOON_CHASER,

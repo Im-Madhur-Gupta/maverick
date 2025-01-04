@@ -6,6 +6,7 @@ import { LoggerModule } from 'libs/logger/src';
 import { AgentsModule } from './agents/agents.module';
 import { CronModule } from './cron/cron.module';
 import { validateEnv } from './common/config/env.validation';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { validateEnv } from './common/config/env.validation';
     LoggerModule,
     AgentsModule,
     CronModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

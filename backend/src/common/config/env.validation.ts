@@ -33,6 +33,10 @@ export class EnvironmentVariables {
   @IsNotEmpty()
   DATABASE_URL: string;
 
+  @IsString()
+  @IsNotEmpty()
+  JWT_SECRET: string;
+
   @IsUrl()
   @IsOptional()
   ORIGIN_URL: string;
