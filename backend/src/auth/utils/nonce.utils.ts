@@ -18,6 +18,7 @@ export function generateSignatureMessage(nonceValue: string): string {
  * @returns {string} The nonce value string.
  */
 export function extractNonceValue(signatureMessage: string): string {
+  // TODO: Improve this, regex can be used
   return signatureMessage.split(':')[1];
 }
 

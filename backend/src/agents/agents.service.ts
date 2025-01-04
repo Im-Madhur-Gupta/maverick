@@ -66,12 +66,8 @@ export class AgentsService {
   async createAgent(
     createAgentDto: CreateAgentDto,
   ): Promise<CreateAgentResponse> {
-    const {
-      name,
-      description,
-      persona: selectedPersona,
-      ownerAddress,
-    } = createAgentDto;
+    const { name, description, persona: selectedPersona } = createAgentDto;
+    const ownerId = 0; // TODO: Retrieve ownerId from the request object, which should be populated by the auth guard
 
     try {
       const { personaPrompt, decisionPromptPool, decisionPromptPortfolio } =
@@ -91,7 +87,7 @@ export class AgentsService {
           name,
           description,
           persona: selectedPersona,
-          ownerAddress,
+          ownerId,
           evmAddress: fereAgent.evm_address,
           solAddress: fereAgent.sol_address,
           isActive: fereAgent.is_active,

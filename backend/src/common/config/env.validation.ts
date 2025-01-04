@@ -21,7 +21,7 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
-  GEMINI_API_KEY: string;
+  GOOGLE_GEMINI_API_KEY: string;
 
   @IsNumber()
   @Min(0)
