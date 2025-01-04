@@ -32,6 +32,7 @@
     "@nestjs/swagger": "^8.1.0",
     "@prisma/client": "^6.1.0",
     "axios": "^1.7.9",
+    "bs58": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "helmet": "^8.0.0",
@@ -39,6 +40,7 @@
     "pino": "^9.6.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
+    "tweetnacl": "^1.0.3",
     "uuid": "^11.0.3"
   },
   "devDependencies": {

@@ -11,6 +11,7 @@ import {
   generateNonceExpiresAt,
   generateSignatureMessage,
   extractNonceValue,
+  verifySolanaSignature,
 } from './utils';
 import { GenerateSignatureMessageDto } from './dto/generate-signature-message.dto';
 import { GenerateSignatureMessageResponse } from './types/generate-signature-message.interface';
@@ -99,7 +100,15 @@ export class AuthService {
 
       const nonce = user.nonces[0];
 
-      // TODO: Verify signature against the nonce for the supplied solana address
+      const isSignatureValid = await verifySolanaSignature(
+        signatureMessage,
+        signature,
+        solanaAddress,
+      );
+
+      if (!isSignatureValid) {
+        throw new UnauthorizedException('Invalid signature');
+      }
 
       // Mark the used nonce by updating 'usedAt' field
       await this.prisma.nonce.update({
