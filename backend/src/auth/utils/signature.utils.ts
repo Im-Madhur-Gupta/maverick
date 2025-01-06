@@ -1,4 +1,4 @@
-import nacl from 'tweetnacl';
+import { sign } from 'tweetnacl';
 import bs58 from 'bs58';
 
 /**
@@ -24,7 +24,7 @@ export async function verifySolanaSignature(
   const signatureBytes = bs58.decode(signature); // convert signature to base58 bytes
   const publicKeyBytes = bs58.decode(publicKey); // convert public key to base58 bytes
 
-  const isSignatureValid = nacl.sign.detached.verify(
+  const isSignatureValid = sign.detached.verify(
     messageBytes,
     signatureBytes,
     publicKeyBytes,

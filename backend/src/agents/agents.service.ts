@@ -2,6 +2,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { LoggerService } from 'libs/logger/src';
 import { PrismaService } from 'libs/prisma/src';
@@ -20,14 +21,25 @@ export class AgentsService {
   ) {}
 
   /**
-   * Retrieves holdings for a given agent.
+   * Retrieves holdings for a given agent after verifying ownership.
    * @param agentId - The unique identifier of the agent.
+   * @param userId - The ID of the user requesting the holdings.
    * @returns A promise that resolves to the agent's holdings.
+   * @throws NotFoundException if agent doesn't exist
+   * @throws ForbiddenException if user doesn't own the agent
    */
-  async getHoldings(agentId: string): Promise<GetHoldingsResponse> {
+  async getHoldings(
+    agentId: string,
+    userId: number,
+  ): Promise<GetHoldingsResponse> {
     try {
       const agent = await this.prisma.agent.findUnique({
         where: { id: agentId },
+        include: {
+          holdings: {
+            include: { coin: true },
+          },
+        },
       });
 
       // Check if agent exists
@@ -35,21 +47,36 @@ export class AgentsService {
         throw new NotFoundException(`Agent with id ${agentId} not found`);
       }
 
-      // Get holdings for agent
-      const holdings = await this.prisma.holding.findMany({
-        where: { agentId },
-        include: { coin: true },
-        omit: { externalId: true },
-      });
+      // Check ownership
+      if (agent.ownerId !== userId) {
+        this.logger.warn('Unauthorized access attempt to agent holdings', {
+          agentId,
+          userId,
+          ownerUserId: agent.ownerId,
+        });
+        throw new ForbiddenException('You do not have access to this agent');
+      }
 
-      this.logger.info('Agent holdings fetched', { agentId, holdings });
-      return holdings;
+      this.logger.info('Agent holdings fetched', {
+        agentId,
+        holdings: agent.holdings,
+      });
+      return {
+        holdings: agent.holdings,
+      };
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException
+      ) {
         throw error;
       }
 
-      this.logger.error('Failed to get agent holdings', { agentId, error });
+      this.logger.error('Failed to get agent holdings', {
+        agentId,
+        userId,
+        error,
+      });
       throw new InternalServerErrorException('Failed to fetch holdings', {
         cause: error,
       });
@@ -59,15 +86,16 @@ export class AgentsService {
   /**
    * Creates a new agent.
    * @param createAgentDto - The data transfer object containing agent details.
+   * @param userId - The ID of the user creating the agent.
    * @returns A promise that resolves to the created agent's response.
    * @throws BadRequestException if the persona is invalid.
    * @throws InternalServerErrorException if agent creation fails.
    */
   async createAgent(
     createAgentDto: CreateAgentDto,
+    userId: number,
   ): Promise<CreateAgentResponse> {
     const { name, description, persona: selectedPersona } = createAgentDto;
-    const ownerId = 0; // TODO: Retrieve ownerId from the request object, which should be populated by the auth guard
 
     try {
       const { personaPrompt, decisionPromptPool, decisionPromptPortfolio } =
@@ -87,7 +115,7 @@ export class AgentsService {
           name,
           description,
           persona: selectedPersona,
-          ownerId,
+          ownerId: userId,
           evmAddress: fereAgent.evm_address,
           solAddress: fereAgent.sol_address,
           isActive: fereAgent.is_active,

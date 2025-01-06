@@ -1,3 +1,5 @@
-import { Holding } from '@prisma/client';
+import { SafeHolding } from './safe-holding.interface';
 
-export type GetHoldingsResponse = Array<Omit<Holding, 'externalId'>>;
+export interface GetHoldingsResponse {
+  holdings: SafeHolding[];
+}

@@ -30,6 +30,7 @@ async function bootstrap() {
     .setDescription('The Memecoin Maverick API description')
     .setVersion('1.0')
     .addTag('memecoin-maverick')
+    .addBearerAuth()
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
