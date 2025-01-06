@@ -16,9 +16,4 @@ export class CreateAgentDto {
   @ApiProperty({ description: 'Persona of the agent', enum: AgentPersona })
   @IsEnum(AgentPersona)
   persona: AgentPersona;
-
-  @ApiProperty({ description: 'Owner address of the agent' })
-  @IsString()
-  @IsNotEmpty()
-  ownerAddress: string;
 }

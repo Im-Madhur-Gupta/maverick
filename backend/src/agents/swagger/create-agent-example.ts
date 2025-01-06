@@ -2,11 +2,10 @@ import { AgentPersona } from '../types/agent-persona.enum';
 import { CreateAgentDto } from '../dto/create-agent.dto';
 import { CreateAgentResponse } from '../types/create-agent.interface';
 
-export const createAgentExample: CreateAgentDto = {
+export const createAgentDtoExample: CreateAgentDto = {
   name: 'MoonBot',
   description: 'A bot that chases moon shots',
   persona: AgentPersona.MOON_CHASER,
-  ownerAddress: '0x1234567890abcdef1234567890abcdef12345678',
 };
 
 export const createAgentResponseExample: CreateAgentResponse = {
@@ -14,7 +13,7 @@ export const createAgentResponseExample: CreateAgentResponse = {
   name: 'MoonBot',
   description: 'A bot that chases moon shots',
   persona: AgentPersona.MOON_CHASER,
-  ownerAddress: '0x1234567890abcdef1234567890abcdef12345678',
+  ownerId: 1,
   solPvtKey: 'abc123...',
   evmPvtKey: 'def456...',
   mnemonic: 'word1 word2 word3...',
