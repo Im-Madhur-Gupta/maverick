@@ -17,6 +17,7 @@ import { GenerateSignatureMessageDto } from './dto/generate-signature-message.dt
 import { GenerateSignatureMessageResponse } from './types/generate-signature-message.interface';
 import { GenerateAccessTokenDto } from './dto/generate-access-token.dto';
 import { GenerateAccessTokenResponse } from './types/generate-access-token.interface';
+import { JwtPayload } from './types/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
@@ -117,7 +118,7 @@ export class AuthService {
       });
 
       // Generate JWT token
-      const payload = {
+      const payload: JwtPayload = {
         sub: user.id,
         solanaAddress,
       };
