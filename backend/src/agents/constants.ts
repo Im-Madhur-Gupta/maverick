@@ -1,4 +1,4 @@
-import { AgentPersona } from '../types/agent-persona.enum';
+import { AgentPersona } from './types/agent-persona.enum';
 
 export const PERSONA_PROMPTS: Record<
   AgentPersona,
