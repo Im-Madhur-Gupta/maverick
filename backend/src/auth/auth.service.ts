@@ -4,15 +4,15 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { PrismaService } from 'libs/prisma/src';
+import { PrismaService } from 'libs/prisma/src/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import {
   generateNonceValue,
   generateNonceExpiresAt,
   generateSignatureMessage,
   extractNonceValue,
-  verifySolanaSignature,
-} from './utils';
+} from './utils/nonce.utils';
+import { verifySolanaSignature } from './utils/signature.utils';
 import { GenerateSignatureMessageDto } from './dto/generate-signature-message.dto';
 import { GenerateSignatureMessageResponse } from './types/generate-signature-message.interface';
 import { GenerateAccessTokenDto } from './dto/generate-access-token.dto';

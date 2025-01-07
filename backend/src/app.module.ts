@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
-import { PrismaModule } from 'libs/prisma/src';
-import { LoggerModule } from 'libs/logger/src';
+import { PrismaModule } from 'libs/prisma/src/prisma.module';
+import { LoggerModule } from 'libs/logger/src/logger.module';
 import { AuthModule } from './auth/auth.module';
 import { AgentsModule } from './agents/agents.module';
 import { CronModule } from './cron/cron.module';

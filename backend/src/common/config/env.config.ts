@@ -1,0 +1,6 @@
+export enum ENV_CONFIG_KEYS {
+  PORT = 'PORT',
+  ORIGIN_URL = 'ORIGIN_URL',
+  FERE_API_KEY = 'FERE_API_KEY',
+  FERE_USER_ID = 'FERE_USER_ID',
+}

@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { LoggerService } from 'libs/logger/src';
+import { LoggerService } from 'libs/logger/src/logger.service';
 import { CreateFereAgentDto } from './dto/create-fere-agent.dto';
 import { CreateFereAgentResponse } from './types/create-fere-agent.interface';
 import { firstValueFrom } from 'rxjs';
 import { GetFereAgentHoldingsResponse } from './types/get-fere-agent-holdings.interface';
 import { ConfigService } from '@nestjs/config';
-import { FERE_CONFIG_KEYS } from './config';
+import { ENV_CONFIG_KEYS } from 'src/common/config/env.config';
 import { FERE_API_BASE_URL } from './constants';
-import { COMMON_CONFIG_KEYS } from 'src/common/config';
 
 @Injectable()
 export class FereService {
@@ -21,10 +20,10 @@ export class FereService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {
-    this.userId = this.configService.get(FERE_CONFIG_KEYS.USER_ID);
-    this.apiKey = this.configService.get(FERE_CONFIG_KEYS.API_KEY);
+    this.userId = this.configService.get(ENV_CONFIG_KEYS.FERE_USER_ID);
+    this.apiKey = this.configService.get(ENV_CONFIG_KEYS.FERE_API_KEY);
     this.originUrl =
-      this.configService.get(COMMON_CONFIG_KEYS.ORIGIN_URL) || 'localhost:3000';
+      this.configService.get(ENV_CONFIG_KEYS.ORIGIN_URL) || 'localhost:3000';
   }
 
   private getApiHeaders(): Record<string, string> {

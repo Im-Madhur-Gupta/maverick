@@ -4,10 +4,10 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { LoggerService } from 'libs/logger/src';
-import { PrismaService } from 'libs/prisma/src';
+import { LoggerService } from 'libs/logger/src/logger.service';
+import { PrismaService } from 'libs/prisma/src/prisma.service';
 import { FereService } from '../fere/fere.service';
-import { getPersonaStrings } from './utils';
+import { getPersonaStrings } from './utils/persona.utils';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { CreateAgentResponse } from './types/create-agent.interface';
 import { GetHoldingsResponse } from './types/get-holdings.interface';

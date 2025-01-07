@@ -3,7 +3,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
-import { COMMON_CONFIG_KEYS } from './common/config';
+import { ENV_CONFIG_KEYS } from './common/config/env.config';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
@@ -37,7 +37,7 @@ async function bootstrap() {
 
   // Fetch port from config
   const configService = app.get(ConfigService);
-  const port = configService.get(COMMON_CONFIG_KEYS.PORT);
+  const port = configService.get(ENV_CONFIG_KEYS.PORT);
 
   // Start server
   await app.listen(port || 3000);

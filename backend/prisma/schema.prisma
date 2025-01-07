@@ -38,8 +38,8 @@ model Agent {
   name         String
   description  String
   persona      Int
-  evmAddress   String    @map("evm_address")
-  solAddress   String    @map("sol_address")
+  evmAddress   String    @unique @map("evm_address")
+  solAddress   String    @unique @map("sol_address")
   isActive     Boolean   @default(true) @map("is_active")
   holdings     Holding[]
   createdAt    DateTime  @default(now()) @map("created_at")
