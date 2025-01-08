@@ -4,7 +4,7 @@ import { LoggerService } from 'libs/logger/src/logger.service';
 import { CreateFereAgentDto } from './dto/create-fere-agent.dto';
 import { CreateFereAgentResponse } from './types/create-fere-agent.interface';
 import { firstValueFrom } from 'rxjs';
-import { GetFereAgentHoldingsResponse } from './types/get-fere-agent-holdings.interface';
+import { FereAgentHolding } from './types/fere-agent-holdings.interface';
 import { ConfigService } from '@nestjs/config';
 import { ENV_CONFIG_KEYS } from 'src/common/config/env.config';
 import { FERE_API_BASE_URL } from './constants';
@@ -82,11 +82,11 @@ export class FereService {
     }
   }
 
-  async getHoldings(agentId: string): Promise<GetFereAgentHoldingsResponse> {
+  async getHoldings(agentId: string): Promise<FereAgentHolding[]> {
     try {
       const url = `${this.baseUrl}/agent/${agentId}/holdings/`;
       const { data } = await firstValueFrom(
-        this.httpService.get<GetFereAgentHoldingsResponse>(url, {
+        this.httpService.get<FereAgentHolding[]>(url, {
           headers: this.getApiHeaders(),
         }),
       );

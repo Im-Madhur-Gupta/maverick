@@ -19,5 +19,3 @@ export interface FereAgentHolding {
   is_active: boolean;
   dry_run: boolean;
 }
-
-export type GetFereAgentHoldingsResponse = Array<FereAgentHolding>;
