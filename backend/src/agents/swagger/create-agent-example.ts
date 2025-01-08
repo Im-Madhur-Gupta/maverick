@@ -1,4 +1,4 @@
-import { AgentPersona } from '../types/agent-persona.enum';
+import { AgentPersona } from '../enums/agent-persona.enum';
 import { CreateAgentDto } from '../dto/create-agent.dto';
 import { CreateAgentResponse } from '../types/create-agent.interface';
 
