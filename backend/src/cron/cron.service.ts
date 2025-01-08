@@ -6,7 +6,7 @@ import { LoggerService } from 'libs/logger/src/logger.service';
 import { PrismaService } from 'libs/prisma/src/prisma.service';
 import { FERE_MAX_CONCURRENT_API_CALLS } from 'src/fere/constants';
 import { FereService } from 'src/fere/fere.service';
-import { SyncAgentHoldingsDto } from './dto/sync-agent-holding.dto';
+import { FereAgentHolding } from 'src/fere/types/fere-agent-holdings.interface';
 
 @Injectable()
 export class CronService {
@@ -22,131 +22,154 @@ export class CronService {
    *
    * The synchronization process:
    * 1. Fetches all active agents from the database
-   * 2. Processes each agent's holdings in parallel, with rate limiting to prevent API overload
+   * 2. Makes parallel API calls to FereAI to fetch holdings data (with rate limiting)
+   * 3. Upserts each agent's holdings sequentially in DB
    */
   @Cron(CronExpression.EVERY_5_MINUTES)
-  async syncAllAgentHoldings() {
-    try {
-      this.logger.info('Syncing agent holdings');
+  async syncAllAgentData() {
+    this.logger.info('Starting sync of all agent data');
 
-      // Fetch externals Ids of active agents
-      const agents = await this.prisma.agent.findMany({
-        where: {
-          isActive: true,
-        },
-        select: {
-          id: true,
-          externalId: true,
-        },
-      });
+    // Fetch externals Ids of active agents
+    const agents = await this.prisma.agent.findMany({
+      where: { isActive: true },
+      select: { id: true, externalId: true },
+    });
 
-      const limit = pLimit(FERE_MAX_CONCURRENT_API_CALLS);
+    // Parallel API calls to FereAI to fetch holdings
+    const limit = pLimit(FERE_MAX_CONCURRENT_API_CALLS);
+    const holdingsData = await Promise.all(
+      agents.map((agent) =>
+        limit(async () => {
+          try {
+            const fereHoldings = await this.fereService.getHoldings(
+              agent.externalId,
+            );
+            return { agentId: agent.id, fereHoldings };
+          } catch (error) {
+            this.logger.error(
+              `Failed to fetch holdings for agent ${agent.id}`,
+              { error },
+            );
+            return null; // Return null to indicate failure
+          }
+        }),
+      ),
+    );
 
-      // Sync holdings for each agent
-      await Promise.all(
-        agents.map(async (agent) =>
-          limit(async () => this.syncAgentHoldings(agent)),
-        ),
-      );
+    // Sequential DB operations to upsert holdings
+    for (const data of holdingsData) {
+      if (!data) continue; // Skip if fetching holdings failed
 
-      this.logger.info('Syncing agent holdings completed');
-    } catch (error) {
-      this.logger.error('Error syncing agent holdings', error);
+      const { agentId, fereHoldings } = data;
+      try {
+        await this.syncAgentData(agentId, fereHoldings);
+      } catch (error) {
+        this.logger.error(`Failed to sync data for agent ${agentId}`, {
+          error,
+        });
+      }
     }
+
+    this.logger.info('Completed sync of all agent data');
   }
 
   /**
-   * Synchronizes holdings data for a single agent.
-   * This method handles the complete synchronization for one agent:
-   * 1. Fetches current holdings from the Fere service
-   * 2. Updates both coin and holding records in a single transaction
+   * Syncs data (coins and holdings) for a single agent in the database.
+   * This method handles the database operations within a transaction:
+   * 1. Creates new coins if they don't exist (no updates to existing coins)
+   * 2. Upserts holdings data for the agent
    *
-   * @param agent - The agent to sync holdings for
-   * @param agent.id - The internal database ID of the agent
-   * @param agent.externalId - The ID used to identify the agent in the Fere system
-   *
-   * @throws May throw errors from database operations or external API calls
+   * @param agentId - The internal database ID of the agent
+   * @param fereHoldings - Array of holdings data from FereAI
    */
-  private async syncAgentHoldings(agent: SyncAgentHoldingsDto) {
-    const { id: agentId, externalId: agentExternalId } = agent;
+  private async syncAgentData(
+    agentId: string,
+    fereHoldings: FereAgentHolding[],
+  ) {
+    this.logger.info(`Syncing data for agent ${agentId}`);
 
-    this.logger.info(`Syncing holdings for agent ${agentId}`);
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        for (const holding of fereHoldings) {
+          const {
+            id: holdingExternalId,
+            token_name: tokenName,
+            pool_name: poolName,
+            base_address: baseAddress,
+            pool_address: poolAddress,
+            decimals: decimals,
+            bought_at: boughtAt,
+            tokens_bought: tokensBought,
+            buying_price_usd: buyingPriceUsd,
+            curr_price_usd: currPriceUsd,
+            profit_abs_usd: profitAbsUsd,
+            profit_per_usd: profitPerUsd,
+            is_active: isActive,
+            dry_run: dryRun,
+          } = holding;
 
-    // Fetch latest holdings for each agent
-    const holdings = await this.fereService.getHoldings(agentExternalId);
+          this.logger.debug(
+            `Upserting coin with baseAddress: ${baseAddress}, coinName: ${tokenName}`,
+          );
 
-    this.logger.info(
-      `Fetched ${holdings.length} holdings for agent ${agentId}`,
-    );
+          const { id: coinId } = await tx.coin.upsert({
+            where: {
+              baseAddress,
+            },
+            update: {},
+            create: {
+              tokenName,
+              poolName,
+              baseAddress,
+              poolAddress,
+              decimals,
+            },
+          });
 
-    // Update coins, holdings in DB in a batched DB transaction
-    await this.prisma.$transaction(async (tx) => {
-      for (const holding of holdings) {
-        const {
-          id: holdingExternalId,
-          token_name: tokenName,
-          pool_name: poolName,
-          base_address: baseAddress,
-          pool_address: poolAddress,
-          decimals: decimals,
-          bought_at: boughtAt,
-          tokens_bought: tokensBought,
-          buying_price_usd: buyingPriceUsd,
-          curr_price_usd: currPriceUsd,
-          profit_abs_usd: profitAbsUsd,
-          profit_per_usd: profitPerUsd,
-          is_active: isActive,
-          dry_run: dryRun,
-        } = holding;
+          this.logger.debug(
+            `Upserting holding with agentId: ${agentId} and coinId: ${coinId}, coinName: ${tokenName}`,
+          );
 
-        const { id: coinId } = await tx.coin.upsert({
-          where: {
-            baseAddress,
-          },
-          update: {},
-          create: {
-            tokenName,
-            poolName,
-            baseAddress,
-            poolAddress,
-            decimals,
-          },
-        });
-
-        await tx.holding.upsert({
-          where: {
-            agentId_coinId: {
+          await tx.holding.upsert({
+            where: {
+              agentId_coinId: {
+                agentId,
+                coinId,
+              },
+            },
+            update: {
+              boughtAt,
+              tokensBought,
+              buyingPriceUsd,
+              currPriceUsd,
+              profitAbsUsd,
+              profitPerUsd,
+              isActive,
+              dryRun,
+            },
+            create: {
               agentId,
               coinId,
+              externalId: holdingExternalId,
+              boughtAt,
+              tokensBought,
+              buyingPriceUsd,
+              currPriceUsd,
+              profitAbsUsd,
+              profitPerUsd,
+              isActive,
+              dryRun,
             },
-          },
-          update: {
-            boughtAt,
-            tokensBought,
-            buyingPriceUsd,
-            currPriceUsd,
-            profitAbsUsd,
-            profitPerUsd,
-            isActive,
-            dryRun,
-          },
-          create: {
-            agentId,
-            coinId,
-            externalId: holdingExternalId,
-            boughtAt,
-            tokensBought,
-            buyingPriceUsd,
-            currPriceUsd,
-            profitAbsUsd,
-            profitPerUsd,
-            isActive,
-            dryRun,
-          },
-        });
-      }
-    });
+          });
+        }
+      });
 
-    this.logger.info(`Syncing holdings for agent ${agentId} completed`);
+      this.logger.info(`Syncing data for agent ${agentId} completed`);
+    } catch (error) {
+      this.logger.error(`DB Transaction failed for agent ${agentId}`, {
+        error,
+      });
+      throw error;
+    }
   }
 }
