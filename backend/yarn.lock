@@ -309,9 +309,9 @@
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
 "@cfworker/json-schema@^4.0.2":
-  version "4.0.3"
-  resolved "https://registry.yarnpkg.com/@cfworker/json-schema/-/json-schema-4.0.3.tgz#30fc6b72322c74ceb27014a779de0ccdfa0dfb9e"
-  integrity sha512-ZykIcDTVv5UNmKWSTLAs3VukO6NDJkkSKxrgUTDPBkAlORVT3H9n5DbRjRl8xIotklscHdbLIa0b9+y3mQq73g==
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@cfworker/json-schema/-/json-schema-4.1.0.tgz#cc114da98c23b12f4cd4673ce8a076be24e0233c"
+  integrity sha512-/vYKi/qMxwNsuIJ9WGWwM2rflY40ZenK3Kh4uR5vB9/Nz12Y7IUN/Xf4wDA7vzPfw0VNh3b/jz4+MjcVgARKJg==
 
 "@colors/colors@1.5.0":
   version "1.5.0"
@@ -650,9 +650,9 @@
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
 "@langchain/core@^0.3.26":
-  version "0.3.26"
-  resolved "https://registry.yarnpkg.com/@langchain/core/-/core-0.3.26.tgz#0ebe7cbe7be316076ddef3feff4ce256a953b751"
-  integrity sha512-6RUQHEp8wv+JwtYIIEBYBzbLlcAQZFc7EDOgAM0ukExjh9HiXoJzoWpgMRRCrr/koIbtwXPJUqBprZK1I1CXHQ==
+  version "0.3.27"
+  resolved "https://registry.yarnpkg.com/@langchain/core/-/core-0.3.27.tgz#b8e75bd4f122b18a423f3905df0e9872205a1a44"
+  integrity sha512-jtJKbJWB1NPU1YvtrExOB2rumvUFgkJwlWGxyjSIV9A6zcLVmUbcZGV8fCSuXgl5bbzOIQLJ1xcLYQmbW9TkTg==
   dependencies:
     "@cfworker/json-schema" "^4.0.2"
     ansi-styles "^5.0.0"
@@ -3723,9 +3723,9 @@ kleur@^3.0.3:
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
 langsmith@^0.2.8:
-  version "0.2.14"
-  resolved "https://registry.yarnpkg.com/langsmith/-/langsmith-0.2.14.tgz#9a186af45730b1e14bd448ac34a7928b633ea6ae"
-  integrity sha512-ClAuAgSf3m9miMYotLEaZKQyKdaWlfjhebCuYco8bc6g72dU2VwTg31Bv4YINBq7EH2i1cMwbOiJxbOXPqjGig==
+  version "0.2.15"
+  resolved "https://registry.yarnpkg.com/langsmith/-/langsmith-0.2.15.tgz#0692a00fc310817cb9b5939488468c93d4ba2c9d"
+  integrity sha512-homtJU41iitqIZVuuLW7iarCzD4f39KcfP9RTBWav9jifhrsDa1Ez89Ejr+4qi72iuBu8Y5xykchsGVgiEZ93w==
   dependencies:
     "@types/uuid" "^10.0.0"
     commander "^10.0.1"
