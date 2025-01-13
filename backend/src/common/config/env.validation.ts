@@ -40,6 +40,10 @@ export class EnvironmentVariables {
   @IsUrl()
   @IsOptional()
   ORIGIN_URL: string;
+
+  @IsString()
+  @IsNotEmpty()
+  REDIS_URL: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {
