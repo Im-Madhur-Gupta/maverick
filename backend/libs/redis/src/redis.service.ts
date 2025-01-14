@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { LoggerService } from 'libs/logger/src/logger.service';
 import { createClient, RedisClientType } from 'redis';
 import { ENV_CONFIG_KEYS } from 'src/common/config/env.config';
-import { HoldingSignal } from './types/holding-signal.interface';
 
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
@@ -68,24 +67,5 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   async isCoinLocked(coinId: number): Promise<boolean> {
     return (await this.client.get(`coin:lock:${coinId}`)) !== null;
-  }
-
-  // Holding Signal
-
-  async saveHoldingSignal(signal: HoldingSignal): Promise<boolean> {
-    return this.client
-      .set(`holding:signal:${signal.holdingId}`, JSON.stringify(signal), {
-        EX: 600,
-      })
-      .then((result) => result === 'OK');
-  }
-
-  async getHoldingSignal(holdingId: string): Promise<HoldingSignal | null> {
-    const signal = await this.client.get(`holding:signal:${holdingId}`);
-    return signal ? JSON.parse(signal) : null;
-  }
-
-  async deleteHoldingSignal(holdingId: string): Promise<void> {
-    await this.client.del(`holding:signal:${holdingId}`);
   }
 }
