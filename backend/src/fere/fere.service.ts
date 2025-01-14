@@ -8,6 +8,11 @@ import { FereAgentHolding } from './types/fere-agent-holdings.interface';
 import { ConfigService } from '@nestjs/config';
 import { ENV_CONFIG_KEYS } from 'src/common/config/env.config';
 import { FERE_API_BASE_URL } from './constants';
+import { FereAgentPortfolio } from './types/fere-agent-portfolio.interface';
+import {
+  CreateFereSellInstructionResponse,
+  FereSellQuantity,
+} from './types/fere-sell-instruction.interface';
 
 @Injectable()
 export class FereService {
@@ -26,6 +31,10 @@ export class FereService {
       this.configService.get(ENV_CONFIG_KEYS.ORIGIN_URL) || 'localhost:3000';
   }
 
+  /**
+   * Gets the common API headers required for Fere API requests
+   * @returns Record of header key-value pairs
+   */
   private getApiHeaders(): Record<string, string> {
     return {
       'Content-Type': 'application/json',
@@ -36,6 +45,11 @@ export class FereService {
     };
   }
 
+  /**
+   * Creates a new Fere trading agent with specified configuration
+   * @param createFereAgentDto - The configuration for the new agent
+   * @returns Promise containing the created agent's details
+   */
   async createAgent(
     createFereAgentDto: CreateFereAgentDto,
   ): Promise<CreateFereAgentResponse> {
@@ -82,6 +96,11 @@ export class FereService {
     }
   }
 
+  /**
+   * Retrieves the current holdings for a specific Fere agent
+   * @param agentId - The unique identifier of the agent
+   * @returns Promise containing an array of the agent's holdings
+   */
   async getHoldings(agentId: string): Promise<FereAgentHolding[]> {
     try {
       const url = `${this.baseUrl}/agent/${agentId}/holdings/`;
@@ -95,6 +114,69 @@ export class FereService {
     } catch (error) {
       this.logger.error('Failed to get Fere agent holdings', {
         agentId,
+        error,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Retrieves the portfolio details for a specific Fere agent
+   * @param agentId - The unique identifier of the agent
+   * @returns Promise containing the agent's portfolio information
+   */
+  async getPortfolio(agentId: string): Promise<FereAgentPortfolio> {
+    try {
+      const url = `${this.baseUrl}/agent/${agentId}/portfolio/`;
+      const { data } = await firstValueFrom(
+        this.httpService.get<FereAgentPortfolio>(url, {
+          headers: this.getApiHeaders(),
+        }),
+      );
+
+      return data;
+    } catch (error) {
+      this.logger.error('Failed to get Fere agent portfolio', {
+        agentId,
+        error,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Creates a sell instruction for a specific holding of a Fere agent
+   * @param agentId - The unique identifier of the agent
+   * @param holdingId - The unique identifier of the holding to sell
+   * @param quantity - The amount to sell in Lamports (1 SOL = 1,000,000,000 Lamports) or 'all' to sell entire holding
+   * @returns Promise containing the task ID for tracking the sell instruction
+   */
+  async createSellInstruction(
+    agentId: string,
+    holdingId: string,
+    quantity: FereSellQuantity,
+  ): Promise<CreateFereSellInstructionResponse> {
+    try {
+      const url = `${this.baseUrl}/agent/${agentId}/sell/${holdingId}/${quantity}/`;
+      const { data } = await firstValueFrom(
+        this.httpService.post<CreateFereSellInstructionResponse>(url, null, {
+          headers: this.getApiHeaders(),
+        }),
+      );
+
+      this.logger.info('Created sell instruction for Fere agent', {
+        agentId,
+        holdingId,
+        quantity,
+        taskId: data.task_id,
+      });
+
+      return data;
+    } catch (error) {
+      this.logger.error('Failed to create sell instruction for Fere agent', {
+        agentId,
+        holdingId,
+        quantity,
         error,
       });
       throw error;
