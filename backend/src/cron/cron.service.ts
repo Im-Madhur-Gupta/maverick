@@ -6,7 +6,7 @@ import { LoggerService } from 'libs/logger/src/logger.service';
 import { PrismaService } from 'libs/prisma/src/prisma.service';
 import { FereService } from 'src/fere/fere.service';
 import { CoinSignalService } from 'src/coin-signal/coin-signal.service';
-import { FERE_MAX_CONCURRENT_API_CALLS } from 'src/fere/constants';
+import { FERE_API_CONCURRENT_LIMIT } from 'src/fere/constants';
 import { FereAgentHolding } from 'src/fere/types/fere-agent-holdings.interface';
 import { CoinWithHoldings } from './types/coin-with-holdings.interface';
 
@@ -70,7 +70,7 @@ export class CronService {
     }
 
     // Parallel API calls to FereAI to fetch holdings
-    const limit = pLimit(FERE_MAX_CONCURRENT_API_CALLS);
+    const limit = pLimit(FERE_API_CONCURRENT_LIMIT);
     const holdingsData = await Promise.all(
       agents.map((agent) =>
         limit(async () => {

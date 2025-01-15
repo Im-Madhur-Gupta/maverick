@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import * as pLimit from 'p-limit';
 import { PipelineStep } from 'src/common/pipeline/types/pipeline-step.interface';
 import { PipelineContext } from 'src/common/pipeline/types/pipeline-context.interface';
 import { FereService } from 'src/fere/fere.service';
@@ -9,6 +10,11 @@ import {
   TradingSignalType,
 } from 'src/ai/enums/trading-signal.enum';
 import { solToLamports } from 'src/common/utils/asset.utils';
+import {
+  FERE_API_CONCURRENT_LIMIT,
+  FERE_API_COOLDOWN_MS,
+} from 'src/fere/constants';
+import { sleep } from 'src/common/utils/time.utils';
 
 @Injectable()
 export class ProcessTradingSignalStep
@@ -31,7 +37,9 @@ export class ProcessTradingSignalStep
       throw new Error('Pipeline shared data is required');
     }
     if (!input.type || !input.strength || !input.percentage) {
-      throw new Error('Invalid trading signal');
+      throw new Error(
+        `Invalid trading signal. TradingSignal: ${JSON.stringify(input)}`,
+      );
     }
   }
 
@@ -62,24 +70,48 @@ export class ProcessTradingSignalStep
       return;
     }
 
-    for (const holding of holdings) {
-      if (signalType === TradingSignalType.SELL) {
-        const { agentExternalId, holdingExternalId, amountBought } = holding;
+    // TODO: Implement proper error handling for parallel requests
+    // Current implementation issues:
+    // 1. BullMQ will retry ALL requests even if only some fail
+    // 2. This can cause duplicate orders for already successful requests
+    // 3. Need to implement:
+    //    - Track successful/failed requests using Promise.allSettled()
+    //    - Store successful requests state
+    //    - Only retry failed requests
+    const limit = pLimit(FERE_API_CONCURRENT_LIMIT);
 
-        const quantityInLamports = solToLamports(
-          signalPercentage * amountBought,
-        );
+    // Process holdings in batches with cooldown
+    const batchSize = FERE_API_CONCURRENT_LIMIT;
+    for (let i = 0; i < holdings.length; i += batchSize) {
+      const batch = holdings.slice(i, i + batchSize);
 
-        await this.fereService.createSellInstruction(
-          agentExternalId,
-          holdingExternalId,
-          quantityInLamports,
-        );
-      }
+      await Promise.all(
+        batch.map((holding) =>
+          limit(async () => {
+            if (signalType === TradingSignalType.SELL) {
+              const { agentExternalId, holdingExternalId, amountBought } =
+                holding;
+              const quantityInLamports = solToLamports(
+                signalPercentage * amountBought,
+              );
 
-      // TODO: Implement creating BUY instructions
-      if (signalType === TradingSignalType.BUY) {
-        break;
+              await this.fereService.createSellInstruction(
+                agentExternalId,
+                holdingExternalId,
+                quantityInLamports,
+              );
+            }
+
+            // TODO: Implement creating BUY instructions
+            if (signalType === TradingSignalType.BUY) {
+            }
+          }),
+        ),
+      );
+
+      // Sleep for 30 sec if there are more batches to process in order to avoid hitting API rate limit
+      if (i + batchSize < holdings.length) {
+        await sleep(FERE_API_COOLDOWN_MS);
       }
     }
   }
