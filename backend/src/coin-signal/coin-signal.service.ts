@@ -18,11 +18,7 @@ export class CoinSignalService {
    * @param coinName - The name of the coin
    * @param holdings - Array of holdings to process in the signal pipeline
    */
-  async enqueueCoinSignal(
-    coinId: number,
-    coinName: string,
-    holdings: HoldingInfo[],
-  ) {
+  async enqueue(coinId: number, coinName: string, holdings: HoldingInfo[]) {
     const sharedData: CoinSignalPipelineSharedData = {
       coinId,
       coinName,

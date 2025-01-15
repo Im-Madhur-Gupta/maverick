@@ -10,7 +10,7 @@ import { CoinSignalPipelineSharedData } from './pipeline/types/coin-signal-pipel
 @Processor('coin-signal')
 export class CoinSignalProcessor extends WorkerHost {
   constructor(
-    private readonly logger: LoggerService,
+    private readonly loggerService: LoggerService,
     private readonly redisService: RedisService,
     private readonly coinSignalPipeline: CoinSignalPipeline,
   ) {
@@ -20,7 +20,7 @@ export class CoinSignalProcessor extends WorkerHost {
   async process(job: Job<CoinSignalPipelineSharedData>): Promise<void> {
     const { coinId, coinName } = job.data;
 
-    this.logger.debug(`Starting coin signal pipeline for ${coinName}`, {
+    this.loggerService.debug(`Starting coin signal pipeline for ${coinName}`, {
       jobId: job.id,
       attempt: job.attemptsMade + 1,
     });
@@ -28,7 +28,7 @@ export class CoinSignalProcessor extends WorkerHost {
     // Check if coin is already being processed
     const isLocked = await this.redisService.isCoinLocked(coinId);
     if (isLocked) {
-      this.logger.info(
+      this.loggerService.info(
         `Skipping coin signal pipeline for ${coinName} as it's already being processed`,
         { jobId: job.id },
       );
@@ -38,7 +38,7 @@ export class CoinSignalProcessor extends WorkerHost {
     // Lock the coin before processing
     const locked = await this.redisService.lockCoin(coinId);
     if (!locked) {
-      this.logger.warn(
+      this.loggerService.warn(
         `Failed to acquire lock for ${coinName}, another process may have taken it`,
         { jobId: job.id },
       );
@@ -48,21 +48,29 @@ export class CoinSignalProcessor extends WorkerHost {
     try {
       const result = await this.coinSignalPipeline.execute(job.data);
 
-      if (!result.success) {
-        const error = new Error(`Coin signal pipeline failed for ${coinName}`);
-        this.logger.error(error.message, {
+      if (result.stopped) {
+        this.loggerService.info(`Pipeline stopped: ${result.stopReason}`, {
           jobId: job.id,
-          stepOutputs: result.stepOutputs,
+          coinName,
         });
-        throw error;
+        return;
       }
 
-      this.logger.info(`Coin signal pipeline completed for ${coinName}`, {
-        jobId: job.id,
-        stepOutputs: result.stepOutputs,
-      });
+      if (!result.success) {
+        throw new Error(`Coin signal pipeline failed for ${coinName}`);
+      }
+
+      this.loggerService.info(
+        `Coin signal pipeline completed for ${coinName}`,
+        {
+          jobId: job.id,
+          coinId: job.data.coinId,
+          coinName: job.data.coinName,
+          stepOutputs: result.stepOutputs,
+        },
+      );
     } catch (error) {
-      this.logger.error(
+      this.loggerService.error(
         `Unexpected error in coin signal processor for ${coinName}`,
         {
           jobId: job.id,

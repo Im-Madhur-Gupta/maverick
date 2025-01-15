@@ -3,7 +3,7 @@ import { LoggerService } from 'libs/logger/src/logger.service';
 import { PipelineContext } from './types/pipeline-context.interface';
 import { PipelineStep } from './types/pipeline-step.interface';
 import { PipelineOutput } from './types/pipeline-output.interface';
-import { PipelineStepOutput } from './types/pipeline-step-output.interface';
+import { PipelineStopError } from './errors/pipeline-stop.error';
 
 /**
  * Base pipeline implementation that processes data through a sequence of steps
@@ -67,28 +67,32 @@ export abstract class BasePipeline<TContext extends PipelineContext> {
       id: context.id,
       success: true,
       stepOutputs: [],
+      stopped: false,
     };
 
     let stepInput: unknown;
 
     for (const step of this.steps) {
-      const stepOutput: PipelineStepOutput<unknown> = {
-        stepName: step.name,
-        success: true,
-      };
-
       try {
         this.logger.info(`Executing step ${step.name}`);
-
         const output = await step.execute(context, stepInput);
-        this.logger.info(
-          `Step ${step.name} executed successfully. Output: ${output}`,
-        );
 
-        stepOutput.output = output;
+        result.stepOutputs.push({
+          stepName: step.name,
+          success: true,
+          output,
+        });
+
         stepInput = output;
-        result.stepOutputs.push(stepOutput);
       } catch (error) {
+        if (error instanceof PipelineStopError) {
+          result.stopped = true;
+          result.stopReason = error.message;
+          result.success = true; // Pipeline stop is not a failure
+          this.logger.info(`Pipeline stopped: ${error.message}`);
+          break;
+        }
+
         result.success = false;
         result.stepOutputs.push({
           stepName: step.name,
@@ -100,8 +104,6 @@ export abstract class BasePipeline<TContext extends PipelineContext> {
         break;
       }
     }
-
-    this.logger.info(`Pipeline execution completed. Result: ${result}`);
 
     return result;
   }

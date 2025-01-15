@@ -9,6 +9,10 @@ export interface PipelineOutput {
   id: string;
   /** Whether all steps executed successfully */
   success: boolean;
-  /** Execution metadata for each step */
+  /** Execution output for each step */
   stepOutputs: PipelineStepOutput<unknown>[];
+  /** Whether the pipeline was stopped */
+  stopped?: boolean;
+  /** Reason for stopping the pipeline */
+  stopReason?: string;
 }

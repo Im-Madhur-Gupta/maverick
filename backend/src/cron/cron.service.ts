@@ -1,39 +1,73 @@
 import { Injectable } from '@nestjs/common';
-import { CronExpression } from '@nestjs/schedule';
 import { Cron } from '@nestjs/schedule';
+import { CronExpression } from '@nestjs/schedule';
 import * as pLimit from 'p-limit';
 import { LoggerService } from 'libs/logger/src/logger.service';
 import { PrismaService } from 'libs/prisma/src/prisma.service';
-import { FERE_MAX_CONCURRENT_API_CALLS } from 'src/fere/constants';
 import { FereService } from 'src/fere/fere.service';
+import { CoinSignalService } from 'src/coin-signal/coin-signal.service';
+import { FERE_MAX_CONCURRENT_API_CALLS } from 'src/fere/constants';
 import { FereAgentHolding } from 'src/fere/types/fere-agent-holdings.interface';
+import { CoinWithHoldings } from './types/coin-with-holdings.interface';
 
 @Injectable()
 export class CronService {
   constructor(
+    private readonly logger: LoggerService,
     private readonly prisma: PrismaService,
     private readonly fereService: FereService,
-    private readonly logger: LoggerService,
+    private readonly coinSignalService: CoinSignalService,
   ) {}
 
   /**
-   * Synchronizes holdings data for all active agents in the DB.
-   * This method runs automatically every 5 minutes.
+   * Main cron job that runs every 5 minutes.
    *
-   * The synchronization process:
-   * 1. Fetches all active agents from the database
-   * 2. Makes parallel API calls to FereAI to fetch holdings data (with rate limiting)
-   * 3. Upserts each agent's holdings sequentially in DB
+   * Steps involved:
+   * 1. Syncs holdings data from FereAI to keep our local state updated
+   * 2. For each coin with active holdings:
+   *    - Fetches relevant social posts
+   *    - Generates AI-based trading signals
+   *    - Processes signals into trade instructions
    */
   @Cron(CronExpression.EVERY_5_MINUTES)
-  async syncAllAgentData() {
-    this.logger.info('Starting sync of all agent data');
+  async syncHoldingsAndProcessSignals() {
+    this.logger.info('Starting holdings sync and signal processing');
+
+    try {
+      await this.syncAllAgentHoldings();
+      await this.enqueueCoinSignals();
+
+      this.logger.info('Completed holdings sync and signal processing');
+    } catch (error) {
+      this.logger.error(
+        'Failed to complete holdings sync and signal processing:',
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Synchronizes holdings data for all active agents from FereAI.
+   *
+   * Process:
+   * 1. Fetches active agents from our database
+   * 2. Makes parallel API calls to FereAI to get current holdings
+   * 3. Updates our database with new holding positions
+   */
+  private async syncAllAgentHoldings() {
+    this.logger.info('Starting sync of agent holdings from FereAI');
 
     // Fetch externals Ids of active agents
     const agents = await this.prisma.agent.findMany({
       where: { isActive: true },
       select: { id: true, externalId: true },
     });
+
+    if (agents.length === 0) {
+      this.logger.info('No active agents found to sync holdings');
+      return;
+    }
 
     // Parallel API calls to FereAI to fetch holdings
     const limit = pLimit(FERE_MAX_CONCURRENT_API_CALLS);
@@ -44,11 +78,14 @@ export class CronService {
             const fereHoldings = await this.fereService.getHoldings(
               agent.externalId,
             );
-            return { agentId: agent.id, fereHoldings };
+            return {
+              agentId: agent.id,
+              fereHoldings,
+            };
           } catch (error) {
             this.logger.error(
-              `Failed to fetch holdings for agent ${agent.id}`,
-              { error },
+              `Failed to fetch holdings for agent ${agent.id}:`,
+              error,
             );
             return null; // Return null to indicate failure
           }
@@ -57,32 +94,43 @@ export class CronService {
     );
 
     // Sequential DB operations to upsert holdings
+    const successfulSyncs = [];
+    const failedSyncs = [];
+
     for (const data of holdingsData) {
-      if (!data) continue; // Skip if fetching holdings failed
+      if (!data) {
+        continue; // Skip if fetching holdings failed
+      }
 
       const { agentId, fereHoldings } = data;
       try {
-        await this.syncAgentData(agentId, fereHoldings);
+        await this.syncAgentHoldings(agentId, fereHoldings);
+        successfulSyncs.push(agentId);
       } catch (error) {
-        this.logger.error(`Failed to sync data for agent ${agentId}`, {
-          error,
-        });
+        failedSyncs.push(agentId);
+        this.logger.error(`Failed to sync data for agent ${agentId}:`, error);
       }
     }
 
-    this.logger.info('Completed sync of all agent data');
+    this.logger.info('Completed sync of agent holdings from FereAI', {
+      successfulSyncs,
+      failedSyncs,
+      totalAgents: agents.length,
+    });
   }
 
   /**
-   * Syncs data (coins and holdings) for a single agent in the database.
-   * This method handles the database operations within a transaction:
-   * 1. Creates new coins if they don't exist (no updates to existing coins)
-   * 2. Upserts holdings data for the agent
+   * Updates database with an agent's current holdings from FereAI.
    *
-   * @param agentId - The internal database ID of the agent
-   * @param fereHoldings - Array of holdings data from FereAI
+   * Process:
+   * For each holding:
+   *  - Creates coin if needed
+   *  - Updates holding position details
+   *
+   * @param agentId - Internal database ID of the agent
+   * @param fereHoldings - Current holdings data from FereAI
    */
-  private async syncAgentData(
+  private async syncAgentHoldings(
     agentId: string,
     fereHoldings: FereAgentHolding[],
   ) {
@@ -113,9 +161,7 @@ export class CronService {
           );
 
           const { id: coinId } = await tx.coin.upsert({
-            where: {
-              baseAddress,
-            },
+            where: { baseAddress },
             update: {},
             create: {
               tokenName,
@@ -164,12 +210,116 @@ export class CronService {
         }
       });
 
-      this.logger.info(`Syncing data for agent ${agentId} completed`);
-    } catch (error) {
-      this.logger.error(`DB Transaction failed for agent ${agentId}`, {
-        error,
+      this.logger.info(`Syncing data completed for agent ${agentId}`, {
+        holdingsCount: fereHoldings.length,
       });
+    } catch (error) {
+      this.logger.error(`DB Transaction failed for agent ${agentId}:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Enqueues coin signal jobs for all coins with active holdings.
+   *
+   * For each coin, creates a pipeline-based job that will:
+   * 1. Fetch relevant social posts
+   * 2. Generate AI-based trading signals
+   * 3. Process signals into trade instructions (buy/sell)
+   *
+   * Each coin's pipeline runs independently through the BullMQ queue system
+   * to ensure scalability and fault isolation.
+   */
+  private async enqueueCoinSignals() {
+    this.logger.info('Starting to enqueue coin signal jobs');
+
+    try {
+      const coins = await this.findCoinsWithHoldings();
+
+      if (coins.length === 0) {
+        this.logger.warn('No coins with active holdings found');
+        return;
+      }
+
+      const successfulEnqueues = [];
+      const failedEnqueues = [];
+
+      // Enqueue signal pipeline job for each coin
+      for (const coin of coins) {
+        try {
+          const holdings = coin.holdings.map((holding) => ({
+            agentExternalId: holding.agent.externalId,
+            holdingExternalId: holding.externalId,
+            amountBought: holding.tokensBought,
+          }));
+
+          await this.coinSignalService.enqueue(
+            coin.id,
+            coin.tokenName,
+            holdings,
+          );
+          successfulEnqueues.push(coin.tokenName);
+        } catch (error) {
+          failedEnqueues.push(coin.tokenName);
+          this.logger.error(
+            `Failed to enqueue coin signal job for ${coin.tokenName}:`,
+            error,
+          );
+        }
+      }
+
+      this.logger.info('Completed enqueuing coin signal jobs', {
+        successfulEnqueues,
+        failedEnqueues,
+        totalCoins: coins.length,
+      });
+    } catch (error) {
+      this.logger.error('Failed to enqueue coin signal jobs:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Retrieves all coins that have active holdings from active agents.
+   *
+   * @returns Promise<CoinWithHoldings[]> Array of coins with their associated holdings data:
+   *  - id: Coin's unique identifier
+   *  - tokenName: Name of the token/coin
+   *  - holdings: Array of active holdings containing:
+   *    - externalId: FereAI's holding identifier
+   *    - tokensBought: Amount of tokens in the holding
+   *    - agent: Associated agent data with their externalId
+   */
+  private async findCoinsWithHoldings(): Promise<CoinWithHoldings[]> {
+    const activeHoldingConditions = {
+      isActive: true,
+      agent: {
+        isActive: true,
+      },
+    };
+
+    return this.prisma.coin.findMany({
+      where: {
+        holdings: {
+          some: activeHoldingConditions,
+        },
+      },
+      select: {
+        id: true,
+        tokenName: true,
+        holdings: {
+          where: activeHoldingConditions,
+          select: {
+            externalId: true,
+            tokensBought: true,
+            agent: {
+              select: {
+                externalId: true,
+              },
+            },
+          },
+        },
+      },
+    });
   }
 }
