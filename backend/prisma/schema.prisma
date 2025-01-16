@@ -34,17 +34,20 @@ model Nonce {
 model Agent {
   id           String    @id @default(uuid())
   externalId   String    @unique @map("external_id") // To store FereAI's agent ID
+  
+  ownerId      Int       @map("owner_id")
+  owner        User      @relation(fields: [ownerId], references: [id])
+  
   name         String
   description  String
   persona      Int
   evmAddress   String    @unique @map("evm_address")
   solAddress   String    @unique @map("sol_address")
   isActive     Boolean   @default(true) @map("is_active")
-  holdings     Holding[]
   createdAt    DateTime  @default(now()) @map("created_at")
 
-  ownerId       Int       @map("owner_id")
-  owner         User      @relation(fields: [ownerId], references: [id])
+  holdings     Holding[]
+  processedCoinSignals ProcessedCoinSignal[]
 
   @@map("agents")
 }
@@ -58,6 +61,7 @@ model Coin {
   decimals    Int    @map("decimals")
 
   holdings Holding[]
+  processedCoinSignals ProcessedCoinSignal[]
 
   @@map("coins")
 }
@@ -85,4 +89,21 @@ model Holding {
 
   @@id([agentId, coinId])
   @@map("holdings")
+}
+
+model ProcessedCoinSignal {
+  id          String   @id @default(uuid())
+  type        String   // Values: BUY, SELL, HOLD
+  strength    String   // Values: WEAK, MODERATE, STRONG
+  amount      BigInt   @db.BigInt // Amount in lamports, must be >= 0
+  sentAt      DateTime @default(now()) @map("sent_at")
+  statusId    String? @map("status_id") // Optional status ID
+  
+  agentId     String   @map("agent_id")
+  agent       Agent    @relation(fields: [agentId], references: [id])
+
+  coinId      Int      @map("coin_id")
+  coin        Coin     @relation(fields: [coinId], references: [id])
+
+  @@map("processed_coin_signals")
 }
