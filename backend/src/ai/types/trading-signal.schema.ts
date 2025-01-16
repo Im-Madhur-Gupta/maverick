@@ -14,10 +14,10 @@ export const TradingSignalSchema = z
       .describe('Strength of the trading signal (WEAK/MODERATE/STRONG)'),
     percentage: z
       .number()
-      .min(-100)
+      .min(0)
       .max(100)
       .describe(
-        'Percentage of holdings to trade. Negative for sell, positive for buy, 0 for hold',
+        'Percentage of current holdings to trade (0-100). For BUY: percentage to increase holdings by. For SELL: percentage of current holdings to sell. For HOLD: 0',
       ),
   })
   .strict();

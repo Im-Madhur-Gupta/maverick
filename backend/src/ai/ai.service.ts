@@ -34,10 +34,10 @@ export class AIService {
 
       Based on the social data, determine:
       1. Whether to BUY or SELL or HOLD ${coinName}
-      2. The exact percentage of holdings to trade (between -100% to +100%)
-         - Use negative percentage for SELL (-100% means sell all holdings)
-         - Use positive percentage for BUY (100% means maximum buy)
-         - Use 0% for HOLD the current holdings
+      2. The exact percentage of holdings to trade (between 0% to 100%)
+        - For SELL, specify the percentage of current holdings to sell
+        - For BUY, specify the percentage of current holdings to buy
+        - Use 0% to HOLD the current holdings
       3. Signal strength (WEAK/MODERATE/STRONG) based on data confidence
 
       Consider:

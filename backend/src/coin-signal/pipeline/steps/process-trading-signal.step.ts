@@ -15,6 +15,7 @@ import {
   FERE_API_COOLDOWN_MS,
 } from 'src/fere/constants';
 import { sleep } from 'src/common/utils/time.utils';
+import { PrismaService } from 'libs/prisma/src/prisma.service';
 
 @Injectable()
 export class ProcessTradingSignalStep
@@ -27,7 +28,10 @@ export class ProcessTradingSignalStep
 {
   readonly name = 'Process Trading Signal for Coin';
 
-  constructor(private readonly fereService: FereService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly fereService: FereService,
+  ) {}
 
   private validateExecuteParams(
     context: PipelineContext<CoinSignalPipelineSharedData>,
@@ -88,13 +92,13 @@ export class ProcessTradingSignalStep
       await Promise.all(
         batch.map((holding) =>
           limit(async () => {
-            if (signalType === TradingSignalType.SELL) {
-              const { agentExternalId, holdingExternalId, amountBought } =
-                holding;
-              const quantityInLamports = solToLamports(
-                signalPercentage * amountBought,
-              );
+            const { agentExternalId, holdingExternalId, amountBought } =
+              holding;
+            const quantityInLamports = solToLamports(
+              (amountBought * signalPercentage) / 100,
+            );
 
+            if (signalType === TradingSignalType.SELL) {
               await this.fereService.createSellInstruction(
                 agentExternalId,
                 holdingExternalId,
@@ -114,5 +118,7 @@ export class ProcessTradingSignalStep
         await sleep(FERE_API_COOLDOWN_MS);
       }
     }
+
+    // TODO: Implement storing processed signals
   }
 }
