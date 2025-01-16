@@ -15,15 +15,6 @@ import { ProcessTradingSignalStep } from './pipeline/steps/process-trading-signa
   imports: [
     BullModule.registerQueue({
       name: 'coin-signal',
-      defaultJobOptions: {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 1000,
-        },
-        removeOnComplete: true,
-        removeOnFail: 100,
-      },
     }),
     RedisModule,
     SocialModule,
@@ -34,7 +25,6 @@ import { ProcessTradingSignalStep } from './pipeline/steps/process-trading-signa
     CoinSignalService,
     CoinSignalProcessor,
     CoinSignalPipeline,
-    // Pipeline steps
     FetchSocialPostsStep,
     GenerateTradingSignalStep,
     ProcessTradingSignalStep,

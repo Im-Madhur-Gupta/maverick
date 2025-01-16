@@ -23,6 +23,15 @@ import { ENV_CONFIG_KEYS } from './common/config/env.config';
         connection: {
           url: configService.get(ENV_CONFIG_KEYS.REDIS_URL),
         },
+        defaultJobOptions: {
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 1000,
+          },
+          removeOnComplete: true,
+          removeOnFail: 100,
+        },
       }),
     }),
     ScheduleModule.forRoot(),
