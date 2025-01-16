@@ -120,7 +120,6 @@ export class AgentsService {
           solAddress: fereAgent.sol_address,
           isActive: fereAgent.is_active,
         },
-        omit: { externalId: true },
       });
 
       this.logger.info('Agent created successfully', {
@@ -128,6 +127,7 @@ export class AgentsService {
         name: agent.name,
         persona: selectedPersona,
       });
+
       return {
         ...agent,
         solPvtKey: fereAgent.sol_pvt_key,

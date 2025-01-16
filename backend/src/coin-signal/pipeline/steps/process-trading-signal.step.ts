@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import * as pLimit from 'p-limit';
 import { PipelineStep } from 'src/common/pipeline/types/pipeline-step.interface';
 import { PipelineContext } from 'src/common/pipeline/types/pipeline-context.interface';
 import { FereService } from 'src/fere/fere.service';
@@ -63,7 +62,7 @@ export class ProcessTradingSignalStep
   ): Promise<void> {
     this.validateExecuteParams(context, input);
 
-    const { holdings } = context.sharedData;
+    const { holdings, coinId } = context.sharedData;
     const {
       type: signalType,
       strength: signalStrength,
@@ -74,6 +73,19 @@ export class ProcessTradingSignalStep
       return;
     }
 
+    const instructions = holdings.map((holding) => {
+      const { agentExternalId, holdingExternalId, amountBought } = holding;
+      const quantityInLamports = solToLamports(
+        (amountBought * signalPercentage) / 100,
+      );
+
+      return {
+        agentExternalId,
+        holdingExternalId,
+        quantityInLamports,
+      };
+    });
+
     // TODO: Implement proper error handling for parallel requests
     // Current implementation issues:
     // 1. BullMQ will retry ALL requests even if only some fail
@@ -82,43 +94,46 @@ export class ProcessTradingSignalStep
     //    - Track successful/failed requests using Promise.allSettled()
     //    - Store successful requests state
     //    - Only retry failed requests
-    const limit = pLimit(FERE_API_CONCURRENT_LIMIT);
 
-    // Process holdings in batches with cooldown
+    // Process instructions in batches with cooldown
     const batchSize = FERE_API_CONCURRENT_LIMIT;
-    for (let i = 0; i < holdings.length; i += batchSize) {
-      const batch = holdings.slice(i, i + batchSize);
+    for (let i = 0; i < instructions.length; i += batchSize) {
+      const instructionBatch = instructions.slice(i, i + batchSize);
 
       await Promise.all(
-        batch.map((holding) =>
-          limit(async () => {
-            const { agentExternalId, holdingExternalId, amountBought } =
-              holding;
-            const quantityInLamports = solToLamports(
-              (amountBought * signalPercentage) / 100,
+        instructionBatch.map(async (instruction) => {
+          const { agentExternalId, holdingExternalId, quantityInLamports } =
+            instruction;
+
+          if (signalType === TradingSignalType.SELL) {
+            await this.fereService.createSellInstruction(
+              agentExternalId,
+              holdingExternalId,
+              quantityInLamports,
             );
+          }
 
-            if (signalType === TradingSignalType.SELL) {
-              await this.fereService.createSellInstruction(
-                agentExternalId,
-                holdingExternalId,
-                quantityInLamports,
-              );
-            }
-
-            // TODO: Implement creating BUY instructions
-            if (signalType === TradingSignalType.BUY) {
-            }
-          }),
-        ),
+          // TODO: Implement creating BUY instructions
+          if (signalType === TradingSignalType.BUY) {
+          }
+        }),
       );
 
       // Sleep for 30 sec if there are more batches to process in order to avoid hitting API rate limit
-      if (i + batchSize < holdings.length) {
+      if (i + batchSize < instructions.length) {
         await sleep(FERE_API_COOLDOWN_MS);
       }
     }
 
-    // TODO: Implement storing processed signals
+    // Store processed signals in DB
+    await this.prismaService.processedCoinSignal.createMany({
+      data: instructions.map((instruction) => ({
+        type: signalType,
+        strength: signalStrength,
+        amount: instruction.quantityInLamports,
+        agentId: instruction.agentExternalId,
+        coinId,
+      })),
+    });
   }
 }
