@@ -10,6 +10,7 @@ import { CoinSignalPipeline } from './pipeline/coin-signal.pipeline';
 import { FetchSocialPostsStep } from './pipeline/steps/fetch-social-posts.step';
 import { GenerateTradingSignalStep } from './pipeline/steps/generate-trading-signal.step';
 import { ProcessTradingSignalStep } from './pipeline/steps/process-trading-signal.step';
+import { CoinSignalController } from './coin-signal.controller';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ProcessTradingSignalStep } from './pipeline/steps/process-trading-signa
     AIModule,
     FereModule,
   ],
+  controllers: [CoinSignalController],
   providers: [
     CoinSignalService,
     CoinSignalProcessor,
