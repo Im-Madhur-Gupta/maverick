@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { pino } from 'pino';
 
 @Injectable()
 export class LoggerService {
   readonly logger: pino.Logger;
 
-  constructor(config: ConfigService) {
+  constructor() {
     this.logger = pino({
-      level: config.get('LOG_LEVEL') || 'info',
+      level: 'info',
     });
   }
 
