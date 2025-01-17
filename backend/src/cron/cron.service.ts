@@ -13,8 +13,8 @@ import { CoinWithHoldings } from './types/coin-with-holdings.interface';
 @Injectable()
 export class CronService {
   constructor(
-    private readonly logger: LoggerService,
-    private readonly prisma: PrismaService,
+    private readonly loggerService: LoggerService,
+    private readonly prismaService: PrismaService,
     private readonly fereService: FereService,
     private readonly coinSignalService: CoinSignalService,
   ) {}
@@ -31,15 +31,15 @@ export class CronService {
    */
   @Cron(CronExpression.EVERY_5_MINUTES)
   async syncHoldingsAndProcessSignals() {
-    this.logger.info('Starting holdings sync and signal processing');
+    this.loggerService.info('Starting holdings sync and signal processing');
 
     try {
       await this.syncAllAgentHoldings();
       await this.enqueueCoinSignals();
 
-      this.logger.info('Completed holdings sync and signal processing');
+      this.loggerService.info('Completed holdings sync and signal processing');
     } catch (error) {
-      this.logger.error(
+      this.loggerService.error(
         'Failed to complete holdings sync and signal processing:',
         error,
       );
@@ -56,16 +56,16 @@ export class CronService {
    * 3. Updates our database with new holding positions
    */
   private async syncAllAgentHoldings() {
-    this.logger.info('Starting sync of agent holdings from FereAI');
+    this.loggerService.info('Starting sync of agent holdings from FereAI');
 
     // Fetch externals Ids of active agents
-    const agents = await this.prisma.agent.findMany({
+    const agents = await this.prismaService.agent.findMany({
       where: { isActive: true },
       select: { id: true, externalId: true },
     });
 
     if (agents.length === 0) {
-      this.logger.info('No active agents found to sync holdings');
+      this.loggerService.info('No active agents found to sync holdings');
       return;
     }
 
@@ -83,7 +83,7 @@ export class CronService {
               fereHoldings,
             };
           } catch (error) {
-            this.logger.error(
+            this.loggerService.error(
               `Failed to fetch holdings for agent ${agent.id}:`,
               error,
             );
@@ -108,11 +108,14 @@ export class CronService {
         successfulSyncs.push(agentId);
       } catch (error) {
         failedSyncs.push(agentId);
-        this.logger.error(`Failed to sync data for agent ${agentId}:`, error);
+        this.loggerService.error(
+          `Failed to sync data for agent ${agentId}:`,
+          error,
+        );
       }
     }
 
-    this.logger.info('Completed sync of agent holdings from FereAI', {
+    this.loggerService.info('Completed sync of agent holdings from FereAI', {
       successfulSyncs,
       failedSyncs,
       totalAgents: agents.length,
@@ -134,10 +137,10 @@ export class CronService {
     agentId: string,
     fereHoldings: FereAgentHolding[],
   ) {
-    this.logger.info(`Syncing data for agent ${agentId}`);
+    this.loggerService.info(`Syncing data for agent ${agentId}`);
 
     try {
-      await this.prisma.$transaction(async (tx) => {
+      await this.prismaService.$transaction(async (tx) => {
         for (const holding of fereHoldings) {
           const {
             id: holdingExternalId,
@@ -156,7 +159,7 @@ export class CronService {
             dry_run: dryRun,
           } = holding;
 
-          this.logger.debug(
+          this.loggerService.debug(
             `Upserting coin with baseAddress: ${baseAddress}, coinName: ${tokenName}`,
           );
 
@@ -172,7 +175,7 @@ export class CronService {
             },
           });
 
-          this.logger.debug(
+          this.loggerService.debug(
             `Upserting holding with agentId: ${agentId} and coinId: ${coinId}, coinName: ${tokenName}`,
           );
 
@@ -210,11 +213,14 @@ export class CronService {
         }
       });
 
-      this.logger.info(`Syncing data completed for agent ${agentId}`, {
+      this.loggerService.info(`Syncing data completed for agent ${agentId}`, {
         holdingsCount: fereHoldings.length,
       });
     } catch (error) {
-      this.logger.error(`DB Transaction failed for agent ${agentId}:`, error);
+      this.loggerService.error(
+        `DB Transaction failed for agent ${agentId}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -231,13 +237,13 @@ export class CronService {
    * to ensure scalability and fault isolation.
    */
   private async enqueueCoinSignals() {
-    this.logger.info('Starting to enqueue coin signal jobs');
+    this.loggerService.info('Starting to enqueue coin signal jobs');
 
     try {
       const coins = await this.findCoinsWithHoldings();
 
       if (coins.length === 0) {
-        this.logger.warn('No coins with active holdings found');
+        this.loggerService.warn('No coins with active holdings found');
         return;
       }
 
@@ -261,20 +267,20 @@ export class CronService {
           successfulEnqueues.push(coin.tokenName);
         } catch (error) {
           failedEnqueues.push(coin.tokenName);
-          this.logger.error(
+          this.loggerService.error(
             `Failed to enqueue coin signal job for ${coin.tokenName}:`,
             error,
           );
         }
       }
 
-      this.logger.info('Completed enqueuing coin signal jobs', {
+      this.loggerService.info('Completed enqueuing coin signal jobs', {
         successfulEnqueues,
         failedEnqueues,
         totalCoins: coins.length,
       });
     } catch (error) {
-      this.logger.error('Failed to enqueue coin signal jobs:', error);
+      this.loggerService.error('Failed to enqueue coin signal jobs:', error);
       throw error;
     }
   }
@@ -298,7 +304,7 @@ export class CronService {
       },
     };
 
-    return this.prisma.coin.findMany({
+    return this.prismaService.coin.findMany({
       where: {
         holdings: {
           some: activeHoldingConditions,

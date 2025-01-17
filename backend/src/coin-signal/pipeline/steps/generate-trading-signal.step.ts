@@ -19,8 +19,8 @@ export class GenerateTradingSignalStep
   readonly name = 'Generate Trading Signal for Coin from Social Posts';
 
   constructor(
-    private readonly aiService: AIService,
     private readonly loggerService: LoggerService,
+    private readonly aiService: AIService,
   ) {}
 
   private validateExecuteParams(

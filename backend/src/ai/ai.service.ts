@@ -11,9 +11,9 @@ import { LoggerService } from 'libs/logger/src/logger.service';
 @Injectable()
 export class AIService {
   constructor(
+    private readonly loggerService: LoggerService,
     @Inject(LLM_PROVIDER)
     private readonly llmProvider: LlmProvider,
-    private readonly logger: LoggerService,
   ) {}
 
   /**
@@ -54,7 +54,7 @@ export class AIService {
         TradingSignalSchema,
       );
     } catch (error) {
-      this.logger.error(
+      this.loggerService.error(
         `Error generating trading signal for ${coinName}: ${error}`,
       );
       throw error;

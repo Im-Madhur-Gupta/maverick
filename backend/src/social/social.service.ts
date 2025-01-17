@@ -6,7 +6,7 @@ import { GetPostsForCoinResponse } from './types/get-posts-for-coin.interface';
 @Injectable()
 export class SocialService {
   constructor(
-    private readonly logger: LoggerService,
+    private readonly loggerService: LoggerService,
     private readonly farcasterSocialProvider: FarcasterSocialProvider,
   ) {}
 
@@ -14,7 +14,7 @@ export class SocialService {
     try {
       return await this.farcasterSocialProvider.getPostsForCoin(coinName);
     } catch (error) {
-      this.logger.error(`Error fetching posts for ${coinName}:`, error);
+      this.loggerService.error(`Error fetching posts for ${coinName}:`, error);
       throw error;
     }
   }
