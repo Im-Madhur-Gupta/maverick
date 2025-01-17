@@ -13,7 +13,10 @@ export const createAgentResponseExample: CreateAgentResponse = {
   name: 'MoonBot',
   description: 'A bot that chases moon shots',
   persona: AgentPersona.MOON_CHASER,
-  ownerId: 1,
+  owner: {
+    solanaAddress: 'JAJMHzapWE55Gk2oQ1wgn3GLuZnMsDsJ4Wrwt4jbYR1p',
+    createdAt: new Date(),
+  },
   solPvtKey: 'abc123...',
   evmPvtKey: 'def456...',
   mnemonic: 'word1 word2 word3...',

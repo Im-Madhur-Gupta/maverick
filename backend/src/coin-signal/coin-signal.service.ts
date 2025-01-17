@@ -52,8 +52,23 @@ export class CoinSignalService {
         where: { id: agentId },
         include: {
           processedCoinSignals: {
+            select: {
+              type: true,
+              strength: true,
+              amount: true,
+              agentId: true,
+              sentAt: true,
+            },
             include: {
-              coin: true,
+              coin: {
+                select: {
+                  baseAddress: true,
+                  tokenName: true,
+                  decimals: true,
+                  poolName: true,
+                  poolAddress: true,
+                },
+              },
             },
             orderBy: {
               sentAt: 'desc',
@@ -74,6 +89,13 @@ export class CoinSignalService {
         signals: agent.processedCoinSignals,
       };
     } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException
+      ) {
+        throw error;
+      }
+
       this.loggerService.error(`Error getting processed signals: ${error}`);
       throw new InternalServerErrorException('Error getting processed signals');
     }

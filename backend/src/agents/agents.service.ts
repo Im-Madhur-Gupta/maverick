@@ -37,7 +37,27 @@ export class AgentsService {
         where: { id: agentId },
         include: {
           holdings: {
-            include: { coin: true },
+            select: {
+              boughtAt: true,
+              tokensBought: true,
+              buyingPriceUsd: true,
+              currPriceUsd: true,
+              profitAbsUsd: true,
+              profitPerUsd: true,
+              isActive: true,
+              dryRun: true,
+            },
+            include: {
+              coin: {
+                select: {
+                  baseAddress: true,
+                  tokenName: true,
+                  decimals: true,
+                  poolName: true,
+                  poolAddress: true,
+                },
+              },
+            },
           },
         },
       });
@@ -122,6 +142,22 @@ export class AgentsService {
           evmAddress: fereAgent.evm_address,
           solAddress: fereAgent.sol_address,
           isActive: fereAgent.is_active,
+        },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          persona: true,
+          evmAddress: true,
+          solAddress: true,
+          isActive: true,
+          createdAt: true,
+          owner: {
+            select: {
+              solanaAddress: true,
+              createdAt: true,
+            },
+          },
         },
       });
 
