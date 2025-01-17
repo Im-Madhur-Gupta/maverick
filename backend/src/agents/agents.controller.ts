@@ -18,12 +18,42 @@ import { getHoldingsResponseExample } from './swagger/get-holdings-example';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../auth/decorators/user.decorator';
 import { AuthUser } from '../auth/types/auth-user.interface';
+import { FereAgentPortfolio } from 'src/fere/types/fere-agent-portfolio.interface';
+import { getPortfolioResponseExample } from './swagger/get-portfolio-example';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('agents')
 export class AgentsController {
   constructor(private readonly agentsService: AgentsService) {}
+
+  @Post('/create')
+  @ApiOperation({
+    summary: 'Create a new trading agent',
+  })
+  @ApiBody({
+    type: CreateAgentDto,
+    examples: {
+      example: {
+        value: createAgentDtoExample,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Agent created successfully',
+    content: {
+      'application/json': {
+        example: createAgentResponseExample,
+      },
+    },
+  })
+  createAgent(
+    @Body() createAgentDto: CreateAgentDto,
+    @User() user: AuthUser,
+  ): Promise<CreateAgentResponse> {
+    return this.agentsService.createAgent(createAgentDto, user.id);
+  }
 
   @Get('/:agentId/holdings')
   @ApiOperation({
@@ -54,31 +84,32 @@ export class AgentsController {
     return this.agentsService.getHoldings(agentId, user.id);
   }
 
-  @Post('/create')
+  @Get('/:agentId/portfolio')
   @ApiOperation({
-    summary: 'Create a new trading agent',
+    summary: 'Get portfolio for a given agent',
   })
-  @ApiBody({
-    type: CreateAgentDto,
-    examples: {
-      example: {
-        value: createAgentDtoExample,
+  @ApiParam({
+    name: 'agentId',
+    description: 'Unique identifier of the agent',
+    example: 'agent_123456',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Portfolio retrieved successfully',
+    content: {
+      'application/json': {
+        example: getPortfolioResponseExample,
       },
     },
   })
   @ApiResponse({
-    status: 201,
-    description: 'Agent created successfully',
-    content: {
-      'application/json': {
-        example: createAgentResponseExample,
-      },
-    },
+    status: 403,
+    description: 'Forbidden - Agent does not belong to the authenticated user',
   })
-  createAgent(
-    @Body() createAgentDto: CreateAgentDto,
+  async getPortfolio(
+    @Param('agentId') agentId: string,
     @User() user: AuthUser,
-  ): Promise<CreateAgentResponse> {
-    return this.agentsService.createAgent(createAgentDto, user.id);
+  ): Promise<FereAgentPortfolio> {
+    return this.agentsService.getPortfolio(agentId, user.id);
   }
 }

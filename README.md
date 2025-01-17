@@ -51,27 +51,36 @@ Memecoin Maverick automates the trading process by:
 
 #### Backend
 
-1. Create an agent with selectable personas:
+1. JWT-based authentication using Solana signature (`Ed25519`) verification
+2. Create an agent with selectable personas:
    - `MOON_CHASER`: Focuses on short-term gains from meme coins with high volatility.
    - `MEME_LORD`: Prioritizes meme popularity on Farcaster.
    - `WHALE_WATCHER`: Tracks and mimics strategies of large traders.
-2. Fetch current holdings of an agent
+3. Fetch current holdings of an agent
+4. Fetch portfolio information of an agent
+5. Generate and dispatch trading signals (buy/sell/hold) for coins based on social (Farcaster) sentiment.
 
 ---
 
 ### **TODOs**
 
-- [X] Fix issues with the `create` call, especially formatting of `decision_prompt_pool` and `decision_prompt_portfolio`.
-- [ ] Migrate backend to NestJS and PostgreSQL
+- [X] Fix `create agent` call and formatting of `decision_prompt_pool` and `decision_prompt_portfolio`.
+- [x] Migrate backend to NestJS and PostgreSQL
   - [X] Real-time agent holdings tracker via CRON job
-  - [ ] [WIP] Analyze Farcaster posts:
+  - [x] Analyze Farcaster posts
     - Identify posts about coins in the agent's holdings.
     - Use AI to determine if the sentiment is positive, negative, or neutral.
     - Generate buy/sell/hold signals for agents holding those coins.
-  - [ ] Add get portfolio API
+  - [x] Add get portfolio API
   - [X] Add JWT-based user authentication
+- [ ] Frontend integration and improvements
+    - [ ] Improve landing page UI
+    - [ ] Implement user onboarding
+    - [ ] Create agent
+    - [ ] Get holdings
+    - [ ] Get portfolio
+    - [ ] Get processed coin signals
 - [ ] Persona selection should influence how the agent weighs social signals. For example, `MEME_LORD` gives more emphasis on meme popularity.
-- [ ] Integrate create agent and get holdings on the frontend.
 - [ ] Implement refresh access token mechanism for authentication.
 - [ ] KOL signal integration
   1. Fetch and analyze posts from user-supplied KOL handles
