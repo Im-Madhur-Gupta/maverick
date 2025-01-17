@@ -20,10 +20,11 @@ export class FereService {
   private readonly apiKey: string;
   private readonly userId: string;
   private readonly originUrl: string;
+
   constructor(
-    private readonly logger: LoggerService,
-    private readonly httpService: HttpService,
+    private readonly loggerService: LoggerService,
     private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
   ) {
     this.userId = this.configService.get(ENV_CONFIG_KEYS.FERE_USER_ID);
     this.apiKey = this.configService.get(ENV_CONFIG_KEYS.FERE_API_KEY);
@@ -85,13 +86,13 @@ export class FereService {
         }),
       );
 
-      this.logger.info('Fere agent created', {
+      this.loggerService.info('Fere agent created', {
         id: data.id,
       });
 
       return data;
     } catch (error) {
-      this.logger.error('Failed to create Fere agent', { error });
+      this.loggerService.error('Failed to create Fere agent', { error });
       throw error;
     }
   }
@@ -112,7 +113,7 @@ export class FereService {
 
       return data;
     } catch (error) {
-      this.logger.error('Failed to get Fere agent holdings', {
+      this.loggerService.error('Failed to get Fere agent holdings', {
         agentId,
         error,
       });
@@ -136,7 +137,7 @@ export class FereService {
 
       return data;
     } catch (error) {
-      this.logger.error('Failed to get Fere agent portfolio', {
+      this.loggerService.error('Failed to get Fere agent portfolio', {
         agentId,
         error,
       });
@@ -164,7 +165,7 @@ export class FereService {
         }),
       );
 
-      this.logger.info('Created sell instruction for Fere agent', {
+      this.loggerService.info('Created sell instruction for Fere agent', {
         agentId,
         holdingId,
         quantity,
@@ -173,12 +174,15 @@ export class FereService {
 
       return data;
     } catch (error) {
-      this.logger.error('Failed to create sell instruction for Fere agent', {
-        agentId,
-        holdingId,
-        quantity,
-        error,
-      });
+      this.loggerService.error(
+        'Failed to create sell instruction for Fere agent',
+        {
+          agentId,
+          holdingId,
+          quantity,
+          error,
+        },
+      );
       throw error;
     }
   }

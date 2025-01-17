@@ -15,8 +15,8 @@ import { GetHoldingsResponse } from './types/get-holdings.interface';
 @Injectable()
 export class AgentsService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly logger: LoggerService,
+    private readonly loggerService: LoggerService,
+    private readonly prismaService: PrismaService,
     private readonly fereService: FereService,
   ) {}
 
@@ -33,7 +33,7 @@ export class AgentsService {
     userId: number,
   ): Promise<GetHoldingsResponse> {
     try {
-      const agent = await this.prisma.agent.findUnique({
+      const agent = await this.prismaService.agent.findUnique({
         where: { id: agentId },
         include: {
           holdings: {
@@ -49,15 +49,18 @@ export class AgentsService {
 
       // Check ownership
       if (agent.ownerId !== userId) {
-        this.logger.warn('Unauthorized access attempt to agent holdings', {
-          agentId,
-          userId,
-          ownerUserId: agent.ownerId,
-        });
+        this.loggerService.warn(
+          'Unauthorized access attempt to agent holdings',
+          {
+            agentId,
+            userId,
+            ownerUserId: agent.ownerId,
+          },
+        );
         throw new ForbiddenException('You do not have access to this agent');
       }
 
-      this.logger.info('Agent holdings fetched', {
+      this.loggerService.info('Agent holdings fetched', {
         agentId,
         holdings: agent.holdings,
       });
@@ -72,7 +75,7 @@ export class AgentsService {
         throw error;
       }
 
-      this.logger.error('Failed to get agent holdings', {
+      this.loggerService.error('Failed to get agent holdings', {
         agentId,
         userId,
         error,
@@ -109,7 +112,7 @@ export class AgentsService {
         decisionPromptPortfolio,
       });
 
-      const agent = await this.prisma.agent.create({
+      const agent = await this.prismaService.agent.create({
         data: {
           externalId: fereAgent.id,
           name,
@@ -122,7 +125,7 @@ export class AgentsService {
         },
       });
 
-      this.logger.info('Agent created successfully', {
+      this.loggerService.info('Agent created successfully', {
         agentId: agent.id,
         name: agent.name,
         persona: selectedPersona,
@@ -135,7 +138,7 @@ export class AgentsService {
         mnemonic: fereAgent.mnemonic,
       };
     } catch (error) {
-      this.logger.error('Failed to create agent', {
+      this.loggerService.error('Failed to create agent', {
         error,
         dto: createAgentDto,
       });

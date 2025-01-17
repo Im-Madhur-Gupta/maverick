@@ -3,27 +3,27 @@ import { pino } from 'pino';
 
 @Injectable()
 export class LoggerService {
-  readonly logger: pino.Logger;
+  readonly loggerService: pino.Logger;
 
   constructor() {
-    this.logger = pino({
+    this.loggerService = pino({
       level: 'info',
     });
   }
 
   error(message: string, context?: object): void {
-    this.logger.error(context, message);
+    this.loggerService.error(context, message);
   }
 
   warn(message: string, context?: object): void {
-    this.logger.warn(context, message);
+    this.loggerService.warn(context, message);
   }
 
   info(message: string, context?: object): void {
-    this.logger.info(context, message);
+    this.loggerService.info(context, message);
   }
 
   debug(message: string, context?: object): void {
-    this.logger.debug(context, message);
+    this.loggerService.debug(context, message);
   }
 }

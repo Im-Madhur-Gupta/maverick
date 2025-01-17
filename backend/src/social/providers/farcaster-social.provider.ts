@@ -12,8 +12,8 @@ export class FarcasterSocialProvider implements SocialProvider {
   private readonly baseUrl = 'https://searchcaster.xyz/api';
 
   constructor(
+    private readonly loggerService: LoggerService,
     private readonly httpService: HttpService,
-    private readonly logger: LoggerService,
   ) {}
 
   async getPostsForCoin(coinName: string): Promise<GetPostsForCoinResponse> {
@@ -58,7 +58,7 @@ export class FarcasterSocialProvider implements SocialProvider {
         },
       };
     } catch (error) {
-      this.logger.error(
+      this.loggerService.error(
         `Error fetching Farcaster posts for ${coinName}:`,
         error,
       );

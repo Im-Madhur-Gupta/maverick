@@ -9,15 +9,15 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   private readonly client: RedisClientType;
 
   constructor(
-    private readonly config: ConfigService,
-    private readonly logger: LoggerService,
+    private readonly loggerService: LoggerService,
+    private readonly configService: ConfigService,
   ) {
     this.client = createClient({
-      url: this.config.get(ENV_CONFIG_KEYS.REDIS_URL),
+      url: this.configService.get(ENV_CONFIG_KEYS.REDIS_URL),
       socket: {
         reconnectStrategy: (retries) => {
           if (retries > 10) {
-            this.logger.error('Max redis reconnection attempts reached');
+            this.loggerService.error('Max redis reconnection attempts reached');
             return new Error('Max redis reconnection attempts reached');
           }
           return Math.min(retries * 100, 3000);
@@ -26,16 +26,16 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     });
 
     this.client.on('error', (err) => {
-      this.logger.error('Redis Client Error', err);
+      this.loggerService.error('Redis Client Error', err);
     });
   }
 
   async onModuleInit() {
     try {
       await this.client.connect();
-      this.logger.info('Redis connection established');
+      this.loggerService.info('Redis connection established');
     } catch (error) {
-      this.logger.error('Failed to connect to Redis', error);
+      this.loggerService.error('Failed to connect to Redis', error);
       throw error;
     }
   }
@@ -43,9 +43,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async onModuleDestroy() {
     try {
       await this.client.quit();
-      this.logger.info('Redis connection closed');
+      this.loggerService.info('Redis connection closed');
     } catch (error) {
-      this.logger.error('Error closing Redis connection', error);
+      this.loggerService.error('Error closing Redis connection', error);
       throw error;
     }
   }

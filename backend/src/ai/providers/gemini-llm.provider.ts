@@ -11,8 +11,8 @@ export class GeminiLlmProvider implements LlmProvider {
   private readonly llm: ChatGoogleGenerativeAI;
 
   constructor(
-    private configService: ConfigService,
-    private logger: LoggerService,
+    private readonly loggerService: LoggerService,
+    private readonly configService: ConfigService,
   ) {
     this.llm = new ChatGoogleGenerativeAI({
       apiKey: this.configService.get(ENV_CONFIG_KEYS.GOOGLE_GEMINI_API_KEY),
@@ -35,10 +35,13 @@ export class GeminiLlmProvider implements LlmProvider {
 
       return response;
     } catch (error) {
-      this.logger.error(`Failed to get structured response: ${error.message}`, {
-        prompt,
-        error,
-      });
+      this.loggerService.error(
+        `Failed to get structured response: ${error.message}`,
+        {
+          prompt,
+          error,
+        },
+      );
       throw error;
     }
   }

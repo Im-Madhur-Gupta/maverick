@@ -13,12 +13,12 @@ export class CoinSignalPipeline extends BasePipeline<
   PipelineContext<CoinSignalPipelineSharedData>
 > {
   constructor(
-    logger: LoggerService,
+    loggerService: LoggerService,
     fetchSocialPostsStep: FetchSocialPostsStep,
     generateTradingSignalStep: GenerateTradingSignalStep,
     processTradingSignalStep: ProcessTradingSignalStep,
   ) {
-    super(logger);
+    super(loggerService);
 
     this.addSteps([
       fetchSocialPostsStep,

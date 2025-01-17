@@ -13,7 +13,7 @@ import { PipelineStopError } from './errors/pipeline-stop.error';
 export abstract class BasePipeline<TContext extends PipelineContext> {
   private readonly steps: PipelineStep<TContext, any, any>[] = [];
 
-  constructor(private readonly logger: LoggerService) {}
+  constructor(private readonly loggerService: LoggerService) {}
 
   /**
    * Add multiple steps to the pipeline in sequence
@@ -74,7 +74,7 @@ export abstract class BasePipeline<TContext extends PipelineContext> {
 
     for (const step of this.steps) {
       try {
-        this.logger.info(`Executing step ${step.name}`);
+        this.loggerService.info(`Executing step ${step.name}`);
         const output = await step.execute(context, stepInput);
 
         result.stepOutputs.push({
@@ -89,7 +89,7 @@ export abstract class BasePipeline<TContext extends PipelineContext> {
           result.stopped = true;
           result.stopReason = error.message;
           result.success = true; // Pipeline stop is not a failure
-          this.logger.info(`Pipeline stopped: ${error.message}`);
+          this.loggerService.info(`Pipeline stopped: ${error.message}`);
           break;
         }
 
@@ -100,7 +100,7 @@ export abstract class BasePipeline<TContext extends PipelineContext> {
           error: error instanceof Error ? error : new Error(String(error)),
         });
 
-        this.logger.error(`Pipeline step ${step.name} failed:`, error);
+        this.loggerService.error(`Pipeline step ${step.name} failed:`, error);
         break;
       }
     }

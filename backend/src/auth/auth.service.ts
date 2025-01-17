@@ -22,7 +22,7 @@ import { JwtPayload } from './types/jwt-payload.interface';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -32,7 +32,7 @@ export class AuthService {
     try {
       const { solanaAddress } = generateSignatureMessageDto;
 
-      const nonceValue = await this.prisma.$transaction(async (tx) => {
+      const nonceValue = await this.prismaService.$transaction(async (tx) => {
         // Ensure user exists
         const user = await tx.user.upsert({
           where: { solanaAddress },
@@ -78,7 +78,7 @@ export class AuthService {
       const nonceValue = extractNonceValue(signatureMessage);
 
       // Fetch user and associated nonce given the nonceValue
-      const user = await this.prisma.user.findUnique({
+      const user = await this.prismaService.user.findUnique({
         where: { solanaAddress },
         include: {
           nonces: {
@@ -112,7 +112,7 @@ export class AuthService {
       }
 
       // Mark the used nonce by updating 'usedAt' field
-      await this.prisma.nonce.update({
+      await this.prismaService.nonce.update({
         where: { id: nonce.id },
         data: { usedAt: new Date() },
       });
