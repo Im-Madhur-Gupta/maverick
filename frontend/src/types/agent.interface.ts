@@ -3,11 +3,6 @@ export type AgentPersona = "MOON_CHASER" | "MEME_LORD" | "WHALE_WATCHER";
 export interface PersonaConfig {
   name: string;
   description: string;
-  riskTolerance: number;
-  socialWeight: number;
-  technicalWeight: number;
-  whaleFollowingWeight: number;
-  customPromptModifiers: string[];
 }
 
 export interface TokenConfig {
