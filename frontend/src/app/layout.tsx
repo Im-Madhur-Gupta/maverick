@@ -1,6 +1,8 @@
+import Header from "@/modules/common/components/Header";
+import Footer from "@/modules/common/components/Footer";
+import { Toaster } from "@/modules/common/components/ui/toaster";
+
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 
 export const metadata = {
   title: "Maverick - AI Trading Agents",
@@ -14,10 +16,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`bg-background max-w-6xl mx-auto`}>
+      <body className={`bg-background mx-auto`}>
         <Header />
         {children}
         <Footer />
+
+        <Toaster />
       </body>
     </html>
   );

@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/modules/common/utils/common.utils";
 
 export interface ExternalLinkProps {
   href: string;

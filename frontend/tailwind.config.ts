@@ -3,11 +3,7 @@ import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
-  content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
       colors: {
@@ -18,6 +14,7 @@ export default {
         },
         background: {
           DEFAULT: "#050719",
+          lighter: "#1F1F1F",
         },
         text: {
           primary: "#FFFFFF",
@@ -52,8 +49,12 @@ export default {
       },
       keyframes: {
         "button-press": {
-          "0%, 100%": { transform: "scale(1)" },
-          "50%": { transform: "scale(0.98)" },
+          "0%, 100%": {
+            transform: "scale(1)",
+          },
+          "50%": {
+            transform: "scale(0.98)",
+          },
         },
       },
     },

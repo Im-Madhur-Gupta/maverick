@@ -27,3 +27,12 @@
     @apply text-primary hover:text-primary/80 transition-colors;
   }
 }
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-white;
+  }
+}
