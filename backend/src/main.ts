@@ -40,6 +40,6 @@ async function bootstrap() {
   const port = configService.get(ENV_CONFIG_KEYS.PORT);
 
   // Start server
-  await app.listen(port || 3000);
+  await app.listen(port || 8000);
 }
 bootstrap();
