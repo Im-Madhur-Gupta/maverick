@@ -12,6 +12,7 @@ import { CreateAgentDto } from './dto/create-agent.dto';
 import { CreateAgentResponse } from './types/create-agent.interface';
 import { GetHoldingsResponse } from './types/get-holdings.interface';
 import { FereAgentPortfolio } from 'src/fere/types/fere-agent-portfolio.interface';
+import { GetAgentsResponse } from './types/get-agents.interface';
 
 @Injectable()
 export class AgentsService {
@@ -226,6 +227,45 @@ export class AgentsService {
         error,
       });
       throw error;
+    }
+  }
+
+  async getAgents(userId: number): Promise<GetAgentsResponse> {
+    try {
+      const agents = await this.prismaService.agent.findMany({
+        where: { ownerId: userId },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          persona: true,
+          evmAddress: true,
+          solAddress: true,
+          isActive: true,
+          createdAt: true,
+          owner: {
+            select: {
+              solanaAddress: true,
+              createdAt: true,
+            },
+          },
+        },
+      });
+
+      this.loggerService.info('User agents fetched successfully', {
+        userId,
+        agentCount: agents.length,
+      });
+
+      return { agents };
+    } catch (error) {
+      this.loggerService.error('Failed to fetch user agents', {
+        userId,
+        error,
+      });
+      throw new InternalServerErrorException('Failed to fetch user agents', {
+        cause: error,
+      });
     }
   }
 }
