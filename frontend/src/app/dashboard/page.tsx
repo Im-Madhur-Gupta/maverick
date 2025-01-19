@@ -19,10 +19,11 @@ import { Skeleton } from "@/modules/common/components/ui/skeleton";
 import { useToast } from "@/modules/common/hooks/use-toast";
 import { useAppStore } from "@/modules/common/store/use-app-store";
 import { cn } from "@/modules/common/utils/common.utils";
+import { useEffect } from "react";
 
 export default function Dashboard() {
   const { toast } = useToast();
-  const { agent, isAgentLoading, portfolio, isPortfolioLoading } =
+  const { agent, isAgentLoading, portfolio, isPortfolioLoading, fetchPortfolio } =
     useAppStore();
 
   const copyToClipboard = (text: string) => {
@@ -32,6 +33,19 @@ export default function Dashboard() {
       description: "Address has been copied to your clipboard.",
     });
   };
+
+  useEffect(() => {
+    // Initial fetch
+    fetchPortfolio();
+
+    // Set up periodic fetching every 30 seconds
+    const interval = setInterval(() => {
+      fetchPortfolio();
+    }, 30000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
+  }, [fetchPortfolio]);
 
   // Computed portfolio metrics
 

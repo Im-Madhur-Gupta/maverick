@@ -14,13 +14,13 @@ const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
   const { isConnected } = useAppKitAccount();
-  const { isAuthenticated, checkAuthentication: checkAuth } = useAppStore();
+  const { isAuthenticated, checkAuthentication } = useAppStore();
 
   useEffect(() => {
     if (isConnected) {
-      checkAuth();
+      checkAuthentication();
     }
-  }, [isConnected, checkAuth]);
+  }, [isConnected, checkAuthentication]);
 
   const handleGetStarted = () => {
     router.push(isAuthenticated ? "/dashboard" : "/onboarding");
