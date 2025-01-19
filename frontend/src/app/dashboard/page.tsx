@@ -15,25 +15,15 @@ import {
 } from "@/modules/common/components/ui/tooltip";
 import { Switch } from "@/modules/common/components/ui/switch";
 import { Button } from "@/modules/common/components/ui/button";
+import { Skeleton } from "@/modules/common/components/ui/skeleton";
 import { useToast } from "@/modules/common/hooks/use-toast";
-
-// Dummy data - Replace with API calls
-const agentInfo = {
-  name: "Madhur",
-  status: "Active",
-  solAddress: "7xKX...9Yka",
-  baseAddress: "0x71...F8e2",
-  startDate: "2024-01-01",
-};
-
-const portfolioMetrics = {
-  totalValue: 1039.56,
-  initialInvestment: 1000,
-  totalReturn: 3.96,
-};
+import { useAppStore } from "@/modules/common/store/use-app-store";
+import { cn } from "@/modules/common/utils/common.utils";
 
 export default function Dashboard() {
   const { toast } = useToast();
+  const { agent, isAgentLoading, portfolio, isPortfolioLoading } =
+    useAppStore();
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -43,11 +33,26 @@ export default function Dashboard() {
     });
   };
 
+  // Computed portfolio metrics
+
+  let portfolioGainsValue = "",
+    portfolioGainsPercentage = "",
+    isPortfolioProfitable = true;
+  if (!isPortfolioLoading) {
+    isPortfolioProfitable = portfolio!.currRealisedUsd >= portfolio!.startUsd;
+    portfolioGainsValue = (
+      portfolio!.currRealisedUsd - portfolio!.startUsd
+    ).toFixed(2);
+    portfolioGainsPercentage = (
+      ((portfolio!.currRealisedUsd - portfolio!.startUsd) * 100) /
+      portfolio!.startUsd
+    ).toFixed(2);
+  }
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Dashboard</h1>
 
-      {/* Hero Section */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -55,15 +60,25 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Name: {agentInfo.name}
-              </p>
-              <p className="text-sm text-green-500">
-                Status: {agentInfo.status}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Created At: {new Date(agentInfo.startDate).toLocaleString()}
-              </p>
+              {isAgentLoading ? (
+                <>
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-24" />
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    Name: {agent!.name}
+                  </p>
+                  <p className="text-sm text-green-500">
+                    Status: {agent!.isActive ? "Active" : "Inactive"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Created At: {new Date(agent!.createdAt).toLocaleString()}
+                  </p>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -102,43 +117,41 @@ export default function Dashboard() {
           <CardContent>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger className="text-sm text-muted-foreground">
-                      SOL: {agentInfo.solAddress}
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Minimum deposit: 0.1 SOL</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => copyToClipboard(agentInfo.solAddress)}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
+                {isAgentLoading ? (
+                  <Skeleton className="h-4 w-24" />
+                ) : (
+                  <>
+                    <p>
+                      SOL: {agent!.solanaAddress.slice(0, 8)}...
+                      {agent!.solanaAddress.slice(-8)}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => copyToClipboard(agent!.solanaAddress)}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
               </div>
-              <div className="flex items-center justify-between">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger className="text-sm text-muted-foreground">
-                      Base: {agentInfo.baseAddress}
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Minimum deposit: 0.01 ETH</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => copyToClipboard(agentInfo.baseAddress)}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
+
+              {/* <div className="flex items-center justify-between">
+                {isAgentLoading ? (
+                  <Skeleton className="h-4 w-24" />
+                ) : (
+                  <>
+                    <p>Base: {"-"}</p>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => copyToClipboard("")}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
+              </div> */}
             </div>
           </CardContent>
         </Card>
@@ -152,11 +165,17 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${portfolioMetrics.totalValue}
+              {isPortfolioLoading ? (
+                <Skeleton className="h-4 w-24" />
+              ) : (
+                `$${portfolio!.currRealisedUsd}`
+              )}
             </div>
-            <p className="text-xs text-muted-foreground">≈ 10.2 SOL</p>
+            {/* TODO: Make the value dynamic */}
+            {/* <p className="text-xs text-muted-foreground">≈ 10.2 SOL</p> */}
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium">
@@ -165,20 +184,39 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${portfolioMetrics.initialInvestment}
+              {isPortfolioLoading ? (
+                <Skeleton className="h-4 w-24" />
+              ) : (
+                `$${portfolio!.startUsd}`
+              )}
             </div>
-            <p className="text-xs text-muted-foreground">≈ 9.8 SOL</p>
+            {/* TODO: Make the value dynamic */}
+            {/* <p className="text-xs text-muted-foreground">≈ 9.8 SOL</p> */}
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium">Total Returns</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">
-              +{portfolioMetrics.totalReturn}%
-            </div>
-            <p className="text-xs text-muted-foreground">+$39.56</p>
+            {isPortfolioLoading ? (
+              <Skeleton className="h-4 w-24" />
+            ) : (
+              <>
+                <div
+                  className={cn(
+                    "text-2xl font-bold",
+                    isPortfolioProfitable ? "text-green-500" : "text-red-500"
+                  )}
+                >
+                  {portfolioGainsPercentage}%
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  ${portfolioGainsValue}
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
