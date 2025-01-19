@@ -62,7 +62,7 @@ export interface Portfolio {
   dryRun: boolean;
 }
 
-export interface ProcessedCoinSignal {
+export interface ProcessedSignal {
   type: string;
   strength: number;
   amount: number;

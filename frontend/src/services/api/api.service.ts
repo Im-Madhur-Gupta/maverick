@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from "axios";
 import {
   AccessTokenResponse,
   PortfolioResponse,
-  ProcessedCoinSignal,
+  ProcessedSignal,
 } from "./types";
 import { Portfolio } from "./types";
 import { Holding } from "./types";
@@ -82,6 +82,11 @@ export class ApiService {
     return data;
   }
 
+  async getAgents(): Promise<SafeAgent[]> {
+    const { data } = await this.api.get<{ agents: SafeAgent[] }>("/agents");
+    return data.agents;
+  }
+
   async getHoldings(agentId: string): Promise<Holding[]> {
     const { data } = await this.api.get<{ holdings: Holding[] }>(
       `/agents/${agentId}/holdings`
@@ -106,17 +111,10 @@ export class ApiService {
     };
   }
 
-  async getProcessedCoinSignals(
-    agentId: string
-  ): Promise<ProcessedCoinSignal[]> {
-    const { data } = await this.api.get<{ signals: ProcessedCoinSignal[] }>(
+  async getProcessedCoinSignals(agentId: string): Promise<ProcessedSignal[]> {
+    const { data } = await this.api.get<{ signals: ProcessedSignal[] }>(
       `/coin-signals/${agentId}`
     );
     return data.signals;
-  }
-
-  async getAgents(): Promise<SafeAgent[]> {
-    const { data } = await this.api.get<{ agents: SafeAgent[] }>("/agents");
-    return data.agents;
   }
 }

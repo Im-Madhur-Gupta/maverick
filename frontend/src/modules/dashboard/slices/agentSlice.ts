@@ -1,7 +1,12 @@
 import { StateCreator } from "zustand";
 import { ApiService } from "@/services/api/api.service";
 import { PersonaId } from "@/modules/common/enums/persona-id.enum";
-import type { SafeAgent, Holding, Portfolio } from "@/services/api/types";
+import type {
+  SafeAgent,
+  Holding,
+  Portfolio,
+  ProcessedSignal,
+} from "@/services/api/types";
 
 interface AgentState {
   agent: SafeAgent | null;
@@ -10,6 +15,8 @@ interface AgentState {
   isPortfolioLoading: boolean;
   holdings: Holding[];
   isHoldingsLoading: boolean;
+  processedSignals: ProcessedSignal[];
+  isProcessedSignalsLoading: boolean;
 }
 
 interface AgentActions {
@@ -21,6 +28,7 @@ interface AgentActions {
   fetchAgent: () => Promise<void>;
   fetchHoldings: () => Promise<void>;
   fetchPortfolio: () => Promise<void>;
+  fetchProcessedSignals: () => Promise<void>;
 }
 
 export type AgentSlice = AgentState & AgentActions;
@@ -34,6 +42,9 @@ export const createAgentSlice: StateCreator<AgentSlice> = (set, get) => ({
 
   holdings: [],
   isHoldingsLoading: true,
+
+  processedSignals: [],
+  isProcessedSignalsLoading: true,
 
   fetchAgent: async (): Promise<void> => {
     try {
@@ -107,6 +118,25 @@ export const createAgentSlice: StateCreator<AgentSlice> = (set, get) => ({
       set({ holdings });
     } finally {
       set({ isHoldingsLoading: false });
+    }
+  },
+
+  fetchProcessedSignals: async (): Promise<void> => {
+    try {
+      const agent = get().agent;
+      if (agent === null) {
+        console.error("Agent not found");
+        return;
+      }
+
+      set({ isProcessedSignalsLoading: true });
+
+      const api = ApiService.getInstance();
+      const processedSignals = await api.getProcessedCoinSignals(agent.id);
+
+      set({ processedSignals });
+    } finally {
+      set({ isProcessedSignalsLoading: false });
     }
   },
 });

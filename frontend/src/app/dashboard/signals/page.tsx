@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
+import { useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -21,34 +22,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/modules/common/components/ui/tooltip";
+import { useAppStore } from "@/modules/common/store/use-app-store";
+import { Skeleton } from "@/modules/common/components/ui/skeleton";
+import { lamportsToSol } from "@/modules/common/utils/asset.utils";
 
-// Dummy data - Replace with API calls
-const signalsData = [
-  {
-    asset: "SOL",
-    signal: "buy",
-    amountTraded: "15.23 SOL",
-    timestamp: "2 hours ago",
-    trigger: "Positive social sentiment",
-  },
-  {
-    asset: "BONK",
-    signal: "hold",
-    amountTraded: "1M BONK",
-    timestamp: "5 hours ago",
-    trigger: "Market consolidation",
-  },
-  {
-    asset: "SAMO",
-    signal: "sell",
-    amountTraded: "500 SAMO",
-    timestamp: "1 day ago",
-    trigger: "Sudden market sell pressure",
-  },
-];
-
-const SignalIcon = ({ signal }: { signal: string }) => {
-  switch (signal) {
+const SignalIcon = ({ type }: { type: string }) => {
+  switch (type.toLowerCase()) {
     case "buy":
       return <ArrowUp className="h-4 w-4 text-green-500" />;
     case "sell":
@@ -61,55 +40,101 @@ const SignalIcon = ({ signal }: { signal: string }) => {
 };
 
 export default function Signals() {
+  const { processedSignals, isProcessedSignalsLoading, fetchProcessedSignals } =
+    useAppStore();
+
+  useEffect(() => {
+    // Initial fetch
+    fetchProcessedSignals();
+
+    // Set up periodic fetching every 30 seconds
+    const interval = setInterval(() => {
+      fetchProcessedSignals();
+    }, 30000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
+  }, [fetchProcessedSignals]);
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Trading Signals</h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Trading Signals for Your Portfolio</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Asset</TableHead>
-                <TableHead>Signal</TableHead>
-                <TableHead>Amount Traded</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead>Trigger</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {signalsData.map((signal, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-medium">{signal.asset}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <SignalIcon signal={signal.signal} />
-                      <span className="capitalize">{signal.signal}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{signal.amountTraded}</TableCell>
-                  <TableCell>{signal.timestamp}</TableCell>
-                  <TableCell>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger className="text-sm text-muted-foreground">
-                          {signal.trigger}
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Click for detailed analysis</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </TableCell>
+      {isProcessedSignalsLoading ? (
+        <Card>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+      ) : processedSignals?.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 flex flex-col items-center justify-center text-center space-y-4">
+            <div className="text-4xl">🎯</div>
+            <p className="text-xl font-medium text-muted-foreground max-w-md">
+              Patience is key. Your Maverick is analyzing market signals and
+              social sentiment. Stay tuned for trading opportunities!
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Trading Signals for Your Holdings</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Asset</TableHead>
+                  <TableHead>Signal</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Strength</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {processedSignals.map((signal, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">
+                      {signal.coin.tokenName}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <SignalIcon type={signal.type} />
+                        <span className="capitalize">
+                          {signal.type.toLowerCase()}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {lamportsToSol(signal.amount)} {signal.coin.tokenName}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(signal.sentAt).toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="text-sm text-muted-foreground">
+                            {signal.strength}%
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Signal strength based on market analysis</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
