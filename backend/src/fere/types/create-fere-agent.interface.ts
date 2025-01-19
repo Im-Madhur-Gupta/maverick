@@ -1,4 +1,6 @@
+import { Chain } from 'src/common/enums/chain.enum';
 export interface CreateFereAgentResponse {
+  id: string;
   user_id: string;
   name: string;
   description: string;
@@ -6,6 +8,7 @@ export interface CreateFereAgentResponse {
   data_source: string;
   decision_prompt_pool: string;
   decision_prompt_portfolio: string;
+  chain: Chain;
   twitter_username?: string;
   fc_username?: string;
   dry_run: boolean;
@@ -14,11 +17,9 @@ export interface CreateFereAgentResponse {
   stop_loss: number;
   trailing_stop_loss: number;
   take_profit: number;
-  id: string;
-  sol_address: string;
-  evm_address: string;
-  sol_pvt_key: string;
-  evm_pvt_key: string;
   is_active: boolean;
-  mnemonic: string;
+  wallet: {
+    address: string;
+    pvt_key: string;
+  };
 }
