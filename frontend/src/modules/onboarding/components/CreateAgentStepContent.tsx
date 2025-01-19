@@ -69,7 +69,7 @@ const CreateAgentStepContent = ({
 
       <div className="grid w-full items-center gap-5">
         <Label className="text-sm text-primary flex items-center gap-2">
-          <span>Persona *</span>
+          <span>Select your Maverick&apos;s trading style *</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild className="w-fit">
