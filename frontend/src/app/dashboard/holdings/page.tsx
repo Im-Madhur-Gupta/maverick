@@ -75,9 +75,12 @@ export default function Holdings() {
         <Card>
           <CardContent className="p-12 flex flex-col items-center justify-center text-center space-y-4">
             <div className="text-4xl">🔍</div>
-            <p className="text-xl font-medium text-muted-foreground max-w-md">
+            <p className="text-xl font-medium text-muted-foreground max-w-lg">
               Patience is key. Your Maverick is scanning the horizon for the
-              best opportunities. Stay tuned—great trades are on the way!
+              best opportunities. Once it finds them, they&apos;ll show up here!
+            </p>
+            <p className="text-sm text-muted-foreground">
+              This can take a while depending on the market conditions.
             </p>
           </CardContent>
         </Card>
