@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { CronExpression } from '@nestjs/schedule';
 import * as pLimit from 'p-limit';
 import { LoggerService } from 'libs/logger/src/logger.service';
 import { PrismaService } from 'libs/prisma/src/prisma.service';
@@ -20,7 +19,7 @@ export class CronService {
   ) {}
 
   /**
-   * Main cron job that runs every minute.
+   * Main cron job that runs every 3 minutes.
    *
    * Steps involved:
    * 1. Syncs holdings data from FereAI to keep our local state updated
@@ -29,7 +28,7 @@ export class CronService {
    *    - Generates AI-based trading signals
    *    - Processes signals into trade instructions
    */
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron('0 */3 * * * *')
   async syncHoldingsAndProcessSignals() {
     this.loggerService.info('Starting holdings sync and signal processing');
 
@@ -140,78 +139,97 @@ export class CronService {
     this.loggerService.info(`Syncing data for agent ${agentId}`);
 
     try {
-      await this.prismaService.$transaction(async (tx) => {
-        for (const holding of fereHoldings) {
-          const {
-            id: holdingExternalId,
-            token_name: tokenName,
-            pool_name: poolName,
-            base_address: baseAddress,
-            pool_address: poolAddress,
-            decimals: decimals,
-            bought_at: boughtAt,
-            tokens_bought: tokensBought,
-            buying_price_usd: buyingPriceUsd,
-            curr_price_usd: currPriceUsd,
-            profit_abs_usd: profitAbsUsd,
-            profit_per_usd: profitPerUsd,
-            is_active: isActive,
-            dry_run: dryRun,
-          } = holding;
+      // Process holdings in smaller batches to avoid long-running transactions
+      const BATCH_SIZE = 5;
+      for (let i = 0; i < fereHoldings.length; i += BATCH_SIZE) {
+        const batch = fereHoldings.slice(i, i + BATCH_SIZE);
 
-          this.loggerService.debug(
-            `Upserting coin with baseAddress: ${baseAddress}, coinName: ${tokenName}`,
-          );
+        await this.prismaService.$transaction(
+          async (tx) => {
+            for (const holding of batch) {
+              const {
+                id: holdingExternalId,
+                token_name: tokenName,
+                pool_name: poolName,
+                base_address: baseAddress,
+                pool_address: poolAddress,
+                decimals: decimals,
+                bought_at: boughtAt,
+                tokens_bought: tokensBought,
+                buying_price_usd: buyingPriceUsd,
+                curr_price_usd: currPriceUsd,
+                profit_abs_usd: profitAbsUsd,
+                profit_per_usd: profitPerUsd,
+                is_active: isActive,
+                dry_run: dryRun,
+              } = holding;
 
-          const { id: coinId } = await tx.coin.upsert({
-            where: { baseAddress },
-            update: {},
-            create: {
-              tokenName,
-              poolName,
-              baseAddress,
-              poolAddress,
-              decimals,
-            },
-          });
+              this.loggerService.debug(
+                `Upserting coin with baseAddress: ${baseAddress}, coinName: ${tokenName}`,
+              );
 
-          this.loggerService.debug(
-            `Upserting holding with agentId: ${agentId} and coinId: ${coinId}, coinName: ${tokenName}`,
-          );
+              const { id: coinId } = await tx.coin.upsert({
+                where: { baseAddress },
+                update: {},
+                create: {
+                  tokenName,
+                  poolName,
+                  baseAddress,
+                  poolAddress,
+                  decimals,
+                },
+              });
 
-          await tx.holding.upsert({
-            where: {
-              agentId_coinId: {
-                agentId,
-                coinId,
-              },
-            },
-            update: {
-              boughtAt,
-              tokensBought,
-              buyingPriceUsd,
-              currPriceUsd,
-              profitAbsUsd,
-              profitPerUsd,
-              isActive,
-              dryRun,
-            },
-            create: {
-              agentId,
-              coinId,
-              externalId: holdingExternalId,
-              boughtAt,
-              tokensBought,
-              buyingPriceUsd,
-              currPriceUsd,
-              profitAbsUsd,
-              profitPerUsd,
-              isActive,
-              dryRun,
-            },
-          });
-        }
-      });
+              this.loggerService.debug(
+                `Upserting holding with agentId: ${agentId} and coinId: ${coinId}, coinName: ${tokenName}`,
+              );
+
+              await tx.holding.upsert({
+                where: {
+                  agentId_coinId: {
+                    agentId,
+                    coinId,
+                  },
+                },
+                update: {
+                  boughtAt,
+                  tokensBought,
+                  buyingPriceUsd,
+                  currPriceUsd,
+                  profitAbsUsd: profitAbsUsd ?? 0,
+                  profitPerUsd: profitPerUsd ?? 0,
+                  isActive,
+                  dryRun,
+                },
+                create: {
+                  externalId: holdingExternalId,
+                  boughtAt,
+                  tokensBought,
+                  buyingPriceUsd,
+                  currPriceUsd,
+                  profitAbsUsd: profitAbsUsd ?? 0,
+                  profitPerUsd: profitPerUsd ?? 0,
+                  isActive,
+                  dryRun,
+                  agent: {
+                    connect: {
+                      id: agentId,
+                    },
+                  },
+                  coin: {
+                    connect: {
+                      id: coinId,
+                    },
+                  },
+                },
+              });
+            }
+          },
+          {
+            timeout: 30000, // 30 second timeout for each batch transaction
+          },
+        );
+      }
 
       this.loggerService.info(`Syncing data completed for agent ${agentId}`, {
         holdingsCount: fereHoldings.length,

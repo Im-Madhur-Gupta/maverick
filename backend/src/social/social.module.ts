@@ -6,7 +6,7 @@ import { FarcasterSocialProvider } from './providers/farcaster-social.provider';
 @Module({
   imports: [
     HttpModule.register({
-      timeout: 30000,
+      timeout: 180_000,
       maxRedirects: 5,
     }),
   ],

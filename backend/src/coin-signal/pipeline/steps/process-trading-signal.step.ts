@@ -39,7 +39,7 @@ export class ProcessTradingSignalStep
     if (!context.sharedData) {
       throw new Error('Pipeline shared data is required');
     }
-    if (!input.type || !input.strength || !input.percentage) {
+    if (!input.type || !input.strength || input.percentage === undefined) {
       throw new Error(
         `Invalid trading signal. TradingSignal: ${JSON.stringify(input)}`,
       );

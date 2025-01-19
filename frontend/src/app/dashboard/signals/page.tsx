@@ -74,9 +74,13 @@ export default function Signals() {
         <Card>
           <CardContent className="p-12 flex flex-col items-center justify-center text-center space-y-4">
             <div className="text-4xl">🎯</div>
-            <p className="text-xl font-medium text-muted-foreground max-w-md">
-              Patience is key. Your Maverick is analyzing market signals and
-              social sentiment. Stay tuned for trading opportunities!
+            <p className="text-xl font-medium text-muted-foreground max-w-lg">
+              Your Maverick is fetching signals for the coins in your portfolio.
+              Once identified, they&apos;ll appear right here!
+            </p>
+            <p className="text-sm text-muted-foreground underline">
+              Stay tuned! Soon, you&apos;ll receive signals for all coins,
+              including those not in your portfolio.
             </p>
           </CardContent>
         </Card>
