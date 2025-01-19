@@ -8,6 +8,7 @@ import { Button } from "@/modules/common/components/ui/button";
 import landingImage from "@/assets/images/landing.png";
 import { PERSONAS } from "@/modules/common/constants/personas.constant";
 import { useRouter } from "next/navigation";
+import { useAppStore } from "@/modules/common/store/use-app-store";
 
 const FEATURES = [
   {
@@ -29,10 +30,10 @@ const FEATURES = [
 
 export default function Home() {
   const router = useRouter();
+  const { isAuthenticated } = useAppStore();
 
   const handleGetStarted = () => {
-    // TODO: If user isn't logged then redirect to 'onboarding' else redirect to 'dashboard'
-    router.push("/onboarding");
+    router.push(isAuthenticated ? "/dashboard" : "/onboarding");
   };
 
   return (
@@ -49,9 +50,15 @@ export default function Home() {
           <p className="text-xl md:text-2xl mb-8 text-text-secondary">
             Your Personalized AI Trading Agent for Meme Coins and Beyond
           </p>
-          <Button size="lg" onClick={handleGetStarted}>
-            Get Started
-          </Button>
+          {isAuthenticated ? (
+            <p className="text-lg md:text-xl mb-8 text-primary">
+              Welcome back! Let&apos;s keep trading smarter.
+            </p>
+          ) : (
+            <Button size="lg" onClick={handleGetStarted}>
+              Get Started
+            </Button>
+          )}
         </div>
 
         <Image
@@ -93,26 +100,27 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mt-24 mb-36 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Ready to Elevate Your Trading?
-            </h2>
-            <p className="text-xl mb-8">
-              Create your Maverick now and experience smarter, automated trading
-              with a personalized AI agent.
-            </p>
-            <Button size="xl" onClick={handleGetStarted}>
-              Get Started Today
-            </Button>
-          </motion.div>
-        </div>
-      </section>
+      {!isAuthenticated && (
+        <section className="mt-24 mb-36 text-white">
+          <div className="container mx-auto px-4 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">
+                Ready to Elevate Your Trading?
+              </h2>
+              <p className="text-xl mb-8">
+                Create your Maverick now and experience smarter, automated trading with a personalized AI agent.
+              </p>
+              <Button size="xl" onClick={handleGetStarted}>
+                Get Started Today
+              </Button>
+            </motion.div>
+          </div>
+        </section>
+      )}
     </main>
   );
 }

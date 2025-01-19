@@ -2,7 +2,7 @@ import { Loader2, Info } from "lucide-react";
 import { Button } from "@/modules/common/components/ui/button";
 import { Input } from "@/modules/common/components/ui/input";
 import { Textarea } from "@/modules/common/components/ui/textarea";
-import { CreateAgentData } from "../types/create-agent-data.interface";
+import { CreateAgentData } from "../../common/types/create-agent-data.interface";
 import SelectablePersonaCards from "./SelectablePersonaCards";
 import { PersonaId } from "@/modules/common/enums/persona-id.enum";
 import { Label } from "@/modules/common/components/ui/label";

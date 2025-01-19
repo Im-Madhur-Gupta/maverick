@@ -1,8 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import {
+  useAppKit,
+  useAppKitAccount,
+  useAppKitProvider,
+} from "@reown/appkit/react";
+import type { Provider } from "@reown/appkit-adapter-solana";
+import bs58 from "bs58";
 
 import { Tabs, TabsList } from "@/modules/common/components/ui/tabs";
 import { useToast } from "@/modules/common/hooks/use-toast";
@@ -11,13 +18,20 @@ import OnboardingTabContent from "@/modules/onboarding/components/OnboardingTabC
 import ConnectWalletStepContent from "@/modules/onboarding/components/ConnectWalletStepContent";
 import VerifyWalletStepContent from "@/modules/onboarding/components/VerifyWalletStepContent";
 import CreateAgentStepContent from "@/modules/onboarding/components/CreateAgentStepContent";
-import { CreateAgentData } from "@/modules/onboarding/types/create-agent-data.interface";
+import { CreateAgentData } from "@/modules/common/types/create-agent-data.interface";
 import { OnboardingStepValue } from "@/modules/onboarding/enums/onboarding-step-value.enum";
 import { ONBOARDING_STEPS } from "@/modules/onboarding/constants/onboarding-steps.constant";
+import { useAppStore } from "@/modules/common/store/use-app-store";
 
 export default function Onboarding() {
+  const { open } = useAppKit();
+  const { address, isConnected } = useAppKitAccount();
+  const { walletProvider } = useAppKitProvider<Provider>("solana");
+
   const router = useRouter();
   const { toast } = useToast();
+
+  const { generateSignatureMessage, login, createAgent } = useAppStore();
 
   // TODO: Maybe rename to activeStepValue and completedStepsValues
 
@@ -37,30 +51,70 @@ export default function Onboarding() {
   const handleWalletConnect = async () => {
     setIsLoading(true);
     try {
-      // TODO: Implement wallet connection logic
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulated delay
-      toast({
-        title: "Success",
-        description: "Wallet connected successfully!",
+      await open({
+        view: "Connect",
       });
-      setCompletedSteps([...completedSteps, OnboardingStepValue.ConnectWallet]);
-      setActiveStep(OnboardingStepValue.VerifyWallet);
+      // Successful connection handled in useEffect below
     } catch {
       toast({
         title: "Error",
         description: "Unable to connect to a wallet. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (isConnected) {
+      toast({
+        title: "Success",
+        description: "Wallet connected successfully!",
+      });
+      setCompletedSteps((currentCompletedSteps) => [
+        ...currentCompletedSteps,
+        OnboardingStepValue.ConnectWallet,
+      ]);
+      setActiveStep(OnboardingStepValue.VerifyWallet);
+      setIsLoading(false);
+    }
+  }, [isConnected, toast]);
+
+  /**
+   * Signs a message using the wallet provider and returns the signature in base58 format.
+   *
+   * @param message - The message to sign
+   * @returns A base58-encoded signature string
+   * @throws Error if the wallet is not connected
+   */
+  const signMessage = async (message: string): Promise<string> => {
+    if (!walletProvider || !isConnected) {
+      throw Error("User is not connected");
+    }
+
+    const encodedMessage = new TextEncoder().encode(message);
+    const signatureBytes = await walletProvider.signMessage(encodedMessage);
+
+    const signatureBase58 = bs58.encode(signatureBytes);
+
+    return signatureBase58;
   };
 
   const handleVerifyOwnership = async () => {
     setIsLoading(true);
     try {
-      // TODO: Implement nonce fetching and signature verification
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulated delay
+      if (!address) {
+        throw Error("User is not connected");
+      }
+
+      // TODO: Add a check to see if the user has already verified their wallet
+
+      const signatureMessage = await generateSignatureMessage(address);
+
+      const signature = await signMessage(signatureMessage);
+
+      await login(address, signatureMessage, signature);
+
       toast({
         title: "Success",
         description: "Wallet ownership verified!",
@@ -70,7 +124,7 @@ export default function Onboarding() {
     } catch {
       toast({
         title: "Error",
-        description: "Signature rejected. Please try again.",
+        description: "An error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -79,23 +133,34 @@ export default function Onboarding() {
   };
 
   const handleCreateAgent = async () => {
-    if (!createAgentData.name || !createAgentData.personaId) {
-      toast({
+    if (!createAgentData.name) {
+      return toast({
         title: "Error",
-        description: "Please fill in the required fields",
+        description: "Please fill in the name of your Maverick",
         variant: "destructive",
       });
-      return;
+    }
+
+    if (createAgentData.personaId === null) {
+      return toast({
+        title: "Error",
+        description: "Please select a persona for your Maverick",
+        variant: "destructive",
+      });
     }
 
     setIsLoading(true);
     try {
-      // TODO: Implement agent creation logic
+      // Improve the below API call params
+      await createAgent({
+        name: createAgentData.name,
+        description: createAgentData.description,
+        persona: createAgentData.personaId,
+      });
 
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulated delay
       toast({
         title: "Success",
-        description: "Your Maverick Agent is ready!",
+        description: "Your Maverick is ready!",
       });
       setCompletedSteps([...completedSteps, OnboardingStepValue.CreateAgent]);
 

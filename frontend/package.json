@@ -17,6 +17,11 @@
     "@radix-ui/react-tabs": "^1.1.2",
     "@radix-ui/react-toast": "^1.2.4",
     "@radix-ui/react-tooltip": "^1.1.6",
+    "@reown/appkit": "^1.6.4",
+    "@reown/appkit-adapter-solana": "^1.6.4",
+    "@solana/wallet-adapter-wallets": "^0.19.32",
+    "axios": "^1.7.9",
+    "bs58": "^6.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^11.18.0",
@@ -26,7 +31,8 @@
     "react-dom": "^19.0.0",
     "recharts": "^2.15.0",
     "tailwind-merge": "^2.6.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

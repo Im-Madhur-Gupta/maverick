@@ -1,19 +1,39 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter, usePathname } from "next/navigation";
+import { useAppKitAccount } from "@reown/appkit/react";
 
 import { Button } from "@/modules/common/components/ui/button";
 import ExternalLink from "@/modules/common/components/ExternalLink";
-import { useRouter } from "next/navigation";
+import { useAppStore } from "@/modules/common/store/use-app-store";
 
 const Header = () => {
+  const pathname = usePathname();
   const router = useRouter();
+  const { isConnected } = useAppKitAccount();
+  const { isAuthenticated, checkAuthentication: checkAuth } = useAppStore();
+
+  useEffect(() => {
+    if (isConnected) {
+      checkAuth();
+    }
+  }, [isConnected, checkAuth]);
 
   const handleGetStarted = () => {
-    // TODO: If user isn't logged then redirect to 'onboarding' else redirect to 'dashboard'
-    router.push("/onboarding");
+    router.push(isAuthenticated ? "/dashboard" : "/onboarding");
   };
+
+  const showButton = pathname === "/";
+  const getButtonText = () => {
+    if (isAuthenticated) {
+      return "Go to Dashboard";
+    }
+    return "Get Started";
+  };
+  const buttonText = getButtonText();
 
   return (
     <header className="bg-background text-primary sticky top-0 z-50 w-full border-b border-border">
@@ -34,9 +54,11 @@ const Header = () => {
             <ExternalLink href="https://github.com/Im-Madhur-Gupta/memecoin-maverick">
               About
             </ExternalLink>
-            <Button size="sm" onClick={handleGetStarted}>
-              Get Started
-            </Button>
+            {showButton && (
+              <Button size="sm" onClick={handleGetStarted}>
+                {buttonText}
+              </Button>
+            )}
           </nav>
         </div>
       </div>
