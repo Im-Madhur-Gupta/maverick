@@ -54,18 +54,16 @@ export class AgentsService {
           name,
           description,
           persona: selectedPersona,
-          ownerId: userId,
-          evmAddress: fereAgent.evm_address,
-          solAddress: fereAgent.sol_address,
+          solanaAddress: fereAgent.wallet.address,
           isActive: fereAgent.is_active,
+          ownerId: userId,
         },
         select: {
           id: true,
           name: true,
           description: true,
           persona: true,
-          evmAddress: true,
-          solAddress: true,
+          solanaAddress: true,
           isActive: true,
           createdAt: true,
           owner: {
@@ -85,9 +83,7 @@ export class AgentsService {
 
       return {
         ...agent,
-        solPvtKey: fereAgent.sol_pvt_key,
-        evmPvtKey: fereAgent.evm_pvt_key,
-        mnemonic: fereAgent.mnemonic,
+        solanaPvtKey: fereAgent.wallet.pvt_key,
       };
     } catch (error) {
       this.loggerService.error('Failed to create agent', {
@@ -213,7 +209,7 @@ export class AgentsService {
         throw new ForbiddenException('You do not have access to this agent');
       }
 
-      return this.fereService.getPortfolio(agentId);
+      return this.fereService.getPortfolio(agent.externalId);
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -239,8 +235,7 @@ export class AgentsService {
           name: true,
           description: true,
           persona: true,
-          evmAddress: true,
-          solAddress: true,
+          solanaAddress: true,
           isActive: true,
           createdAt: true,
           owner: {
