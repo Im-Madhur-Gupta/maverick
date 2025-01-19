@@ -12,6 +12,7 @@ import { CreateAgentDto } from './dto/create-agent.dto';
 import { CreateAgentResponse } from './types/create-agent.interface';
 import { GetHoldingsResponse } from './types/get-holdings.interface';
 import { FereAgentPortfolio } from 'src/fere/types/fere-agent-portfolio.interface';
+import { GetAgentsResponse } from './types/get-agents.interface';
 
 @Injectable()
 export class AgentsService {
@@ -53,18 +54,16 @@ export class AgentsService {
           name,
           description,
           persona: selectedPersona,
-          ownerId: userId,
-          evmAddress: fereAgent.evm_address,
-          solAddress: fereAgent.sol_address,
+          solanaAddress: fereAgent.wallet.address,
           isActive: fereAgent.is_active,
+          ownerId: userId,
         },
         select: {
           id: true,
           name: true,
           description: true,
           persona: true,
-          evmAddress: true,
-          solAddress: true,
+          solanaAddress: true,
           isActive: true,
           createdAt: true,
           owner: {
@@ -84,9 +83,7 @@ export class AgentsService {
 
       return {
         ...agent,
-        solPvtKey: fereAgent.sol_pvt_key,
-        evmPvtKey: fereAgent.evm_pvt_key,
-        mnemonic: fereAgent.mnemonic,
+        solanaPvtKey: fereAgent.wallet.pvt_key,
       };
     } catch (error) {
       this.loggerService.error('Failed to create agent', {
@@ -114,7 +111,8 @@ export class AgentsService {
     try {
       const agent = await this.prismaService.agent.findUnique({
         where: { id: agentId },
-        include: {
+        select: {
+          ownerId: true,
           holdings: {
             select: {
               boughtAt: true,
@@ -125,8 +123,6 @@ export class AgentsService {
               profitPerUsd: true,
               isActive: true,
               dryRun: true,
-            },
-            include: {
               coin: {
                 select: {
                   baseAddress: true,
@@ -212,7 +208,7 @@ export class AgentsService {
         throw new ForbiddenException('You do not have access to this agent');
       }
 
-      return this.fereService.getPortfolio(agentId);
+      return this.fereService.getPortfolio(agent.externalId);
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -226,6 +222,44 @@ export class AgentsService {
         error,
       });
       throw error;
+    }
+  }
+
+  async getAgents(userId: number): Promise<GetAgentsResponse> {
+    try {
+      const agents = await this.prismaService.agent.findMany({
+        where: { ownerId: userId },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          persona: true,
+          solanaAddress: true,
+          isActive: true,
+          createdAt: true,
+          owner: {
+            select: {
+              solanaAddress: true,
+              createdAt: true,
+            },
+          },
+        },
+      });
+
+      this.loggerService.info('User agents fetched successfully', {
+        userId,
+        agentCount: agents.length,
+      });
+
+      return { agents };
+    } catch (error) {
+      this.loggerService.error('Failed to fetch user agents', {
+        userId,
+        error,
+      });
+      throw new InternalServerErrorException('Failed to fetch user agents', {
+        cause: error,
+      });
     }
   }
 }

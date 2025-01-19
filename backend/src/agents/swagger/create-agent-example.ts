@@ -17,11 +17,8 @@ export const createAgentResponseExample: CreateAgentResponse = {
     solanaAddress: 'JAJMHzapWE55Gk2oQ1wgn3GLuZnMsDsJ4Wrwt4jbYR1p',
     createdAt: new Date(),
   },
-  solPvtKey: 'abc123...',
-  evmPvtKey: 'def456...',
-  mnemonic: 'word1 word2 word3...',
-  evmAddress: '0x1234567890abcdef1234567890abcdef12345678',
-  solAddress: 'JAJMHzapWE55Gk2oQ1wgn3GLuZnMsDsJ4Wrwt4jbYR1p',
+  solanaAddress: 'JAJMHzapWE55Gk2oQ1wgn3GLuZnMsDsJ4Wrwt4jbYR1p',
+  solanaPvtKey: 'abc123...',
   isActive: true,
   createdAt: new Date(),
 };

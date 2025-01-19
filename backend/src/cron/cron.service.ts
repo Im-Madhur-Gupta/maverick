@@ -20,7 +20,7 @@ export class CronService {
   ) {}
 
   /**
-   * Main cron job that runs every 5 minutes.
+   * Main cron job that runs every minute.
    *
    * Steps involved:
    * 1. Syncs holdings data from FereAI to keep our local state updated
@@ -29,7 +29,7 @@ export class CronService {
    *    - Generates AI-based trading signals
    *    - Processes signals into trade instructions
    */
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron(CronExpression.EVERY_MINUTE)
   async syncHoldingsAndProcessSignals() {
     this.loggerService.info('Starting holdings sync and signal processing');
 

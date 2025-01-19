@@ -20,6 +20,7 @@ import { User } from '../auth/decorators/user.decorator';
 import { AuthUser } from '../auth/types/auth-user.interface';
 import { FereAgentPortfolio } from 'src/fere/types/fere-agent-portfolio.interface';
 import { getPortfolioResponseExample } from './swagger/get-portfolio-example';
+import { GetAgentsResponse } from './types/get-agents.interface';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -111,5 +112,17 @@ export class AgentsController {
     @User() user: AuthUser,
   ): Promise<FereAgentPortfolio> {
     return this.agentsService.getPortfolio(agentId, user.id);
+  }
+
+  @Get()
+  @ApiOperation({
+    summary: 'Get all agents for the authenticated user',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Agents retrieved successfully',
+  })
+  async getAgents(@User() user: AuthUser): Promise<GetAgentsResponse> {
+    return this.agentsService.getAgents(user.id);
   }
 }

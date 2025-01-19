@@ -18,10 +18,12 @@ import { GenerateSignatureMessageResponse } from './types/generate-signature-mes
 import { GenerateAccessTokenDto } from './dto/generate-access-token.dto';
 import { GenerateAccessTokenResponse } from './types/generate-access-token.interface';
 import { JwtPayload } from './types/jwt-payload.interface';
+import { LoggerService } from 'libs/logger/src/logger.service';
 
 @Injectable()
 export class AuthService {
   constructor(
+    private readonly loggerService: LoggerService,
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService,
   ) {}
@@ -29,9 +31,8 @@ export class AuthService {
   async generateSignatureMessage(
     generateSignatureMessageDto: GenerateSignatureMessageDto,
   ): Promise<GenerateSignatureMessageResponse> {
+    const { solanaAddress } = generateSignatureMessageDto;
     try {
-      const { solanaAddress } = generateSignatureMessageDto;
-
       const nonceValue = await this.prismaService.$transaction(async (tx) => {
         // Ensure user exists
         const user = await tx.user.upsert({
@@ -54,10 +55,17 @@ export class AuthService {
 
       const message = generateSignatureMessage(nonceValue);
 
+      this.loggerService.info(
+        `Generated signature message for user ${solanaAddress}: ${message}`,
+      );
+
       return {
         message,
       };
     } catch (error) {
+      this.loggerService.error(
+        `Failed to generate signature message for user ${solanaAddress}: ${error}`,
+      );
       throw new InternalServerErrorException(
         'Failed to generate signature message',
         {
@@ -70,9 +78,9 @@ export class AuthService {
   async generateAccessToken(
     generateAccessTokenDto: GenerateAccessTokenDto,
   ): Promise<GenerateAccessTokenResponse> {
+    const { solanaAddress, signatureMessage, signature } =
+      generateAccessTokenDto;
     try {
-      const { solanaAddress, signatureMessage, signature } =
-        generateAccessTokenDto;
 
       // Extract nonceValue from signatureMessage string
       const nonceValue = extractNonceValue(signatureMessage);
@@ -124,6 +132,10 @@ export class AuthService {
       };
       const accessToken = this.jwtService.sign(payload);
 
+      this.loggerService.info(
+        `Generated access token for user ${solanaAddress}: ${accessToken}`,
+      );
+
       return {
         accessToken,
       };
@@ -134,6 +146,10 @@ export class AuthService {
       ) {
         throw error;
       }
+
+      this.loggerService.error(
+        `Failed to generate access token for user ${solanaAddress}: ${error}`,
+      );
 
       throw new InternalServerErrorException(
         'Failed to generate access token',

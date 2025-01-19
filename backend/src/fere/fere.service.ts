@@ -13,6 +13,7 @@ import {
   CreateFereSellInstructionResponse,
   FereSellQuantity,
 } from './types/fere-sell-instruction.interface';
+import { Chain } from 'src/common/enums/chain.enum';
 
 @Injectable()
 export class FereService {
@@ -77,6 +78,8 @@ export class FereService {
         stop_loss: 0.5,
         trailing_stop_loss: 0.3,
         take_profit: 1.0,
+        // TODO: Implement multi-chain agent deployment
+        chain: Chain.SOLANA,
       };
 
       const url = `${this.baseUrl}/agent/`;

@@ -7,8 +7,7 @@ export type SafeAgent = Pick<
   | 'name'
   | 'description'
   | 'persona'
-  | 'evmAddress'
-  | 'solAddress'
+  | 'solanaAddress'
   | 'isActive'
   | 'createdAt'
 > & {
