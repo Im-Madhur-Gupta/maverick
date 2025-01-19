@@ -75,7 +75,7 @@ model Holding {
   coin     Coin  @relation(fields: [coinId], references: [id])
   
   boughtAt DateTime @map("bought_at")
-  tokensBought Int @map("tokens_bought")
+  tokensBought Float @map("tokens_bought")
   buyingPriceUsd Float @map("buying_price_usd")
   currPriceUsd Float @map("curr_price_usd")
   profitAbsUsd Float @map("profit_abs_usd")

@@ -1,4 +1,4 @@
-# Memecoin Maverick Backend
+# Maverick Backend
 
 REST API for creating, and managing AI agents that automate memecoin trading based on market and social insights.
 
@@ -9,6 +9,7 @@ REST API for creating, and managing AI agents that automate memecoin trading bas
 - PostgreSQL
 - PrismaORM
 - Docker
+- BullMQ
 
 ## API Documentation
 
@@ -41,6 +42,8 @@ The application requires specific environment variables to function. Use the `.e
 # Development mode
 yarn start:dev
 ```
+
+Note: You can also build the Docker image to run the backend.
 
 ---
 
