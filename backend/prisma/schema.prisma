@@ -32,21 +32,20 @@ model Nonce {
 }
 
 model Agent {
-  id           String    @id @default(uuid())
-  externalId   String    @unique @map("external_id") // To store FereAI's agent ID
+  id            String    @id @default(uuid())
+  externalId    String    @unique @map("external_id") // To store FereAI's agent ID
   
-  ownerId      Int       @map("owner_id")
-  owner        User      @relation(fields: [ownerId], references: [id])
+  ownerId       Int       @map("owner_id")
+  owner         User      @relation(fields: [ownerId], references: [id])
   
-  name         String
-  description  String
-  persona      Int
-  evmAddress   String    @unique @map("evm_address")
-  solAddress   String    @unique @map("sol_address")
-  isActive     Boolean   @default(true) @map("is_active")
-  createdAt    DateTime  @default(now()) @map("created_at")
+  name          String
+  description   String
+  persona       Int
+  solanaAddress String    @unique @map("solana_address")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
 
-  holdings     Holding[]
+  holdings      Holding[]
   processedCoinSignals ProcessedCoinSignal[]
 
   @@map("agents")
