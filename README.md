@@ -1,4 +1,4 @@
-# Memecoin Maverick
+# Maverick
 
 <div align="center">
     <img src="https://github.com/user-attachments/assets/d58f2f74-a509-4e99-8428-6dea918a7826" alt="Logo" height="250"/>
@@ -6,7 +6,7 @@
 
 ### **Overview**
 
-**Memecoin Maverick** is an AI agent that autonomously trades meme coins for you based on your preferences and insights from top traders. Built to simplify meme coin trading, the agent leverages real-time on-chain and social data for intelligent, automated decision-making.
+**Maverick** is a platform to create AI agents that can autonomously trade memecoins for you based on your selected preferences and insights from top traders. Built to simplify meme coin trading, the agent leverages real-time on-chain and social data for intelligent, automated decision-making.
 
 **Website**: [get-maverick.vercel.app](https://get-maverick.vercel.app/) <br/>
 **API Docs**: [maverick-backend.onrender.com/api](https://maverick-backend.onrender.com/api)
@@ -15,17 +15,17 @@
 
 ### **Problem**
 
-Meme coin trading is highly volatile and hype-driven, often influenced by social media trends and Key Opinion Leaders (KOLs). Traders lack efficient tools to keep up with these rapid changes, missing out on opportunities.
+Memecoin trading is highly volatile and hype-driven, often influenced by social media trends and Key Opinion Leaders (KOLs). Traders lack efficient tools to keep up with these rapid changes, missing out on opportunities.
 
 ---
 
 ### **Solution**
 
-Memecoin Maverick automates the trading process by:
+Maverick allowes you to set up AI agents that automate the trading process by:
 
 - Using AI to analyze market sentiment and trends.
 - Following strategies of trusted traders via their blockchain addresses or Farcaster handles.
-- Executing trades for you based on pre-set criteria.
+- Executing trades for you based on pre-set persona.
 
 ---
 
@@ -43,8 +43,9 @@ Memecoin Maverick automates the trading process by:
   - Docker
   - BullMQ
 - **AI**:
-  - LLMs for trend prediction and decision-making.
+  - Google Gemini for trend prediction and decision-making.
 - **Blockchain**:
+  - Currently, agents are deployed on Solana.
   - **Agent**: Leveraging the 0xDisciple agent from [FereAI](https://www.fereai.xyz/) for autonomous trading.
 
 ---
@@ -99,7 +100,7 @@ Memecoin Maverick automates the trading process by:
   1. Fetch and analyze posts from user-supplied KOL handles.
   2. Generate trading signals based on KOL discussions for both portfolio and potential coins.
 - [ ] Integrate the BUY API when it's available from [FereAI](https://www.fereai.xyz/).
-- [ ] [LONG TERM] Generalize the agent for all types of crypto trading, beyond meme coins.
+- [ ] [LONG TERM] Generalize the agent for all types of trading including crypto and stocks, beyond meme coins.
 
 ---
 
