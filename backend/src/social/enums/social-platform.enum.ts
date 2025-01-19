@@ -1,0 +1,4 @@
+export enum SOCIAL_PLATFORM {
+  FARCASTER = 'FARCASTER',
+  TWITTER = 'TWITTER',
+}

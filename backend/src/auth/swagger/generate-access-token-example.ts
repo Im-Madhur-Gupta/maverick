@@ -1,7 +1,9 @@
 import { GenerateAccessTokenDto } from '../dto/generate-access-token.dto';
 import { GenerateAccessTokenResponse } from '../types/generate-access-token.interface';
-import { generateSignatureMessage } from '../utils';
-import { generateNonceValue } from '../utils';
+import {
+  generateSignatureMessage,
+  generateNonceValue,
+} from '../utils/nonce.utils';
 
 export const generateAccessTokenDtoExample: GenerateAccessTokenDto = {
   solanaAddress: 'JAJMHzapWE55Gk2oQ1wgn3GLuZnMsDsJ4Wrwt4jbYR1p',

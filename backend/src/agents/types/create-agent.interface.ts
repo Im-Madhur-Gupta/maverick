@@ -1,7 +1,6 @@
-import { Agent } from '@prisma/client';
+import { SafeAgent } from './safe-agent.interface';
 
-export interface CreateAgentResponse extends Omit<Agent, 'externalId'> {
-  solPvtKey: string;
-  evmPvtKey: string;
-  mnemonic: string;
+export interface CreateAgentResponse extends SafeAgent {
+  solanaPvtKey: string;
 }
+

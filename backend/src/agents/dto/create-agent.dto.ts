@@ -1,5 +1,5 @@
 import { IsString, IsNotEmpty, IsEnum } from 'class-validator';
-import { AgentPersona } from '../types/agent-persona.enum';
+import { AgentPersona } from '../enums/agent-persona.enum';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateAgentDto {

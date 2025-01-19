@@ -4,35 +4,36 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { PrismaService } from 'libs/prisma/src';
+import { PrismaService } from 'libs/prisma/src/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import {
   generateNonceValue,
   generateNonceExpiresAt,
   generateSignatureMessage,
   extractNonceValue,
-  verifySolanaSignature,
-} from './utils';
+} from './utils/nonce.utils';
+import { verifySolanaSignature } from './utils/signature.utils';
 import { GenerateSignatureMessageDto } from './dto/generate-signature-message.dto';
 import { GenerateSignatureMessageResponse } from './types/generate-signature-message.interface';
 import { GenerateAccessTokenDto } from './dto/generate-access-token.dto';
 import { GenerateAccessTokenResponse } from './types/generate-access-token.interface';
 import { JwtPayload } from './types/jwt-payload.interface';
+import { LoggerService } from 'libs/logger/src/logger.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly loggerService: LoggerService,
+    private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService,
   ) {}
 
   async generateSignatureMessage(
     generateSignatureMessageDto: GenerateSignatureMessageDto,
   ): Promise<GenerateSignatureMessageResponse> {
+    const { solanaAddress } = generateSignatureMessageDto;
     try {
-      const { solanaAddress } = generateSignatureMessageDto;
-
-      const nonceValue = await this.prisma.$transaction(async (tx) => {
+      const nonceValue = await this.prismaService.$transaction(async (tx) => {
         // Ensure user exists
         const user = await tx.user.upsert({
           where: { solanaAddress },
@@ -54,10 +55,17 @@ export class AuthService {
 
       const message = generateSignatureMessage(nonceValue);
 
+      this.loggerService.info(
+        `Generated signature message for user ${solanaAddress}: ${message}`,
+      );
+
       return {
         message,
       };
     } catch (error) {
+      this.loggerService.error(
+        `Failed to generate signature message for user ${solanaAddress}: ${error}`,
+      );
       throw new InternalServerErrorException(
         'Failed to generate signature message',
         {
@@ -70,15 +78,15 @@ export class AuthService {
   async generateAccessToken(
     generateAccessTokenDto: GenerateAccessTokenDto,
   ): Promise<GenerateAccessTokenResponse> {
+    const { solanaAddress, signatureMessage, signature } =
+      generateAccessTokenDto;
     try {
-      const { solanaAddress, signatureMessage, signature } =
-        generateAccessTokenDto;
 
       // Extract nonceValue from signatureMessage string
       const nonceValue = extractNonceValue(signatureMessage);
 
       // Fetch user and associated nonce given the nonceValue
-      const user = await this.prisma.user.findUnique({
+      const user = await this.prismaService.user.findUnique({
         where: { solanaAddress },
         include: {
           nonces: {
@@ -112,7 +120,7 @@ export class AuthService {
       }
 
       // Mark the used nonce by updating 'usedAt' field
-      await this.prisma.nonce.update({
+      await this.prismaService.nonce.update({
         where: { id: nonce.id },
         data: { usedAt: new Date() },
       });
@@ -124,6 +132,10 @@ export class AuthService {
       };
       const accessToken = this.jwtService.sign(payload);
 
+      this.loggerService.info(
+        `Generated access token for user ${solanaAddress}: ${accessToken}`,
+      );
+
       return {
         accessToken,
       };
@@ -134,6 +146,10 @@ export class AuthService {
       ) {
         throw error;
       }
+
+      this.loggerService.error(
+        `Failed to generate access token for user ${solanaAddress}: ${error}`,
+      );
 
       throw new InternalServerErrorException(
         'Failed to generate access token',
