@@ -111,7 +111,8 @@ export class AgentsService {
     try {
       const agent = await this.prismaService.agent.findUnique({
         where: { id: agentId },
-        include: {
+        select: {
+          ownerId: true,
           holdings: {
             select: {
               boughtAt: true,
@@ -122,8 +123,6 @@ export class AgentsService {
               profitPerUsd: true,
               isActive: true,
               dryRun: true,
-            },
-            include: {
               coin: {
                 select: {
                   baseAddress: true,

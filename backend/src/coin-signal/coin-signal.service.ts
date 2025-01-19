@@ -58,8 +58,6 @@ export class CoinSignalService {
               amount: true,
               agentId: true,
               sentAt: true,
-            },
-            include: {
               coin: {
                 select: {
                   baseAddress: true,
