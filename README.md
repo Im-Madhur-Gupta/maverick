@@ -6,10 +6,10 @@
 
 ### **Overview**
 
-**Memecoin Maverick** is an AI agent that autonomously trades meme coins for you based on your preferences and insights from top traders. Built to simplify meme coin trading, the agent leverages real-time onchain and social data for intelligent, automated decision-making.
+**Memecoin Maverick** is an AI agent that autonomously trades meme coins for you based on your preferences and insights from top traders. Built to simplify meme coin trading, the agent leverages real-time on-chain and social data for intelligent, automated decision-making.
 
-**API Docs**: [maverick-backend.onrender.com/api](https://maverick-backend.onrender.com/api) <br/>
-**Frontend**: [memecoin-maverick.vercel.app](https://memecoin-maverick.vercel.app/) [WIP]
+**Website**: [get-maverick.vercel.app](https://get-maverick.vercel.app/) <br/>
+**API Docs**: [maverick-backend.onrender.com/api](https://maverick-backend.onrender.com/api)
 
 ---
 
@@ -39,9 +39,11 @@ Memecoin Maverick automates the trading process by:
   - NestJS
   - PostgreSQL
   - PrismaORM
+  - Redis
   - Docker
+  - BullMQ
 - **AI**:
-  - LLMs for trend prediction, and decision-making (WIP).
+  - LLMs for trend prediction and decision-making.
 - **Blockchain**:
   - **Agent**: Leveraging the 0xDisciple agent from [FereAI](https://www.fereai.xyz/) for autonomous trading.
 
@@ -51,40 +53,51 @@ Memecoin Maverick automates the trading process by:
 
 #### Backend
 
-1. JWT-based authentication using Solana signature (`Ed25519`) verification
+1. JWT-based authentication using Solana signature (`Ed25519`) verification.
 2. Create an agent with selectable personas:
    - `MOON_CHASER`: Focuses on short-term gains from meme coins with high volatility.
    - `MEME_LORD`: Prioritizes meme popularity on Farcaster.
    - `WHALE_WATCHER`: Tracks and mimics strategies of large traders.
-3. Fetch current holdings of an agent
-4. Fetch portfolio information of an agent
+3. Fetch current holdings of an agent.
+4. Fetch portfolio information of an agent.
 5. Generate and dispatch trading signals (buy/sell/hold) for coins based on social (Farcaster) sentiment.
+6. Integrated pipeline framework for coin signal processing with BullMQ.
+7. Added endpoints to fetch processed coin signals.
+
+#### Frontend
+
+1. Improved landing page UI.
+2. Completed onboarding flow for agent creation and setup.
+3. Dashboard displays portfolio and trading signal data.
+4. Periodic updates for real-time portfolio, holdings insights.
 
 ---
 
 ### **TODOs**
 
 - [X] Fix `create agent` call and formatting of `decision_prompt_pool` and `decision_prompt_portfolio`.
-- [x] Migrate backend to NestJS and PostgreSQL
-  - [X] Real-time agent holdings tracker via CRON job
-  - [x] Analyze Farcaster posts
+- [X] Migrate backend to NestJS and PostgreSQL.
+  - [X] Real-time agent holdings tracker via CRON job.
+  - [X] Analyze Farcaster posts:
     - Identify posts about coins in the agent's holdings.
     - Use AI to determine if the sentiment is positive, negative, or neutral.
     - Generate buy/sell/hold signals for agents holding those coins.
-  - [x] Add get portfolio API
-  - [X] Add JWT-based user authentication
-- [ ] Frontend integration and improvements
-    - [ ] Improve landing page UI
-    - [ ] Implement user onboarding
-    - [ ] Create agent
-    - [ ] Get holdings
-    - [ ] Get portfolio
-    - [ ] Get processed coin signals
+  - [X] Add get portfolio API.
+  - [X] Add JWT-based user authentication.
+  - [X] Integrate Redis for signal management.
+  - [X] Add BullMQ-based pipeline for signal processing.
+- [X] Frontend integration and improvements:
+  - [X] Improve landing page UI.
+  - [X] Implement user onboarding.
+  - [X] Create agent.
+  - [X] Get holdings.
+  - [X] Get portfolio.
+  - [X] Get processed coin signals.
 - [ ] Persona selection should influence how the agent weighs social signals. For example, `MEME_LORD` gives more emphasis on meme popularity.
 - [ ] Implement refresh access token mechanism for authentication.
-- [ ] KOL signal integration
-  1. Fetch and analyze posts from user-supplied KOL handles
-  2. Generate trading signals based on KOL discussions for both portfolio and potential coins
+- [ ] KOL signal integration:
+  1. Fetch and analyze posts from user-supplied KOL handles.
+  2. Generate trading signals based on KOL discussions for both portfolio and potential coins.
 - [ ] Integrate the BUY API when it's available from [FereAI](https://www.fereai.xyz/).
 - [ ] [LONG TERM] Generalize the agent for all types of crypto trading, beyond meme coins.
 
