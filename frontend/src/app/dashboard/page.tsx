@@ -52,14 +52,13 @@ export default function Dashboard() {
   let portfolioGainsValue = "",
     portfolioGainsPercentage = "",
     isPortfolioProfitable = true;
-  if (!isPortfolioLoading) {
-    isPortfolioProfitable = portfolio!.currRealisedUsd >= portfolio!.startUsd;
+  if (!isPortfolioLoading && portfolio) {
+    isPortfolioProfitable = portfolio.currRealisedUsd >= portfolio.startUsd;
     portfolioGainsValue = (
-      portfolio!.currRealisedUsd - portfolio!.startUsd
+      portfolio.currRealisedUsd - portfolio.startUsd
     ).toFixed(2);
     portfolioGainsPercentage = (
-      ((portfolio!.currRealisedUsd - portfolio!.startUsd) * 100) /
-      portfolio!.startUsd
+      ((portfolio.currRealisedUsd - portfolio.startUsd) * 100) / portfolio.startUsd
     ).toFixed(2);
   }
 
@@ -179,10 +178,10 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isPortfolioLoading ? (
+              {isPortfolioLoading || !portfolio ? (
                 <Skeleton className="h-4 w-24" />
               ) : (
-                `$${portfolio!.currRealisedUsd}`
+                `$${portfolio.currRealisedUsd}`
               )}
             </div>
             {/* TODO: Make the value dynamic */}
@@ -198,10 +197,10 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isPortfolioLoading ? (
+              {isPortfolioLoading || !portfolio ? (
                 <Skeleton className="h-4 w-24" />
               ) : (
-                `$${portfolio!.startUsd}`
+                `$${portfolio.startUsd}`
               )}
             </div>
             {/* TODO: Make the value dynamic */}
