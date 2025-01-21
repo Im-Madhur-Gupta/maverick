@@ -41,7 +41,19 @@ createAppKit({
   projectId,
   features: {
     analytics: true,
+    email: true,
+    socials: [
+      "google",
+      "x",
+      "discord",
+      "farcaster",
+      "github",
+      "apple",
+      "facebook",
+    ],
+    emailShowWallets: true,
   },
+  allWallets: "SHOW",
 });
 
 export default function RootLayout({
