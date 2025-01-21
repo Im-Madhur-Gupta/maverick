@@ -9,6 +9,7 @@ import { useAppKitAccount } from "@reown/appkit/react";
 import { Button } from "@/modules/common/components/ui/button";
 import ExternalLink from "@/modules/common/components/ExternalLink";
 import { useAppStore } from "@/modules/common/store/use-app-store";
+import ConnectedUserInfo from "@/modules/dashboard/components/ConnectedUserInfo";
 
 const Header = () => {
   const pathname = usePathname();
@@ -26,14 +27,16 @@ const Header = () => {
     router.push(isAuthenticated ? "/dashboard" : "/onboarding");
   };
 
-  const showButton = pathname === "/";
-  const getButtonText = () => {
+  const showLandingCta = pathname === "/";
+  const getLandingCtaText = () => {
     if (isAuthenticated) {
       return "Go to Dashboard";
     }
     return "Get Started";
   };
-  const buttonText = getButtonText();
+  const landingCtaText = getLandingCtaText();
+
+  const showConnectedUserInfo = isAuthenticated && pathname === "/dashboard";
 
   return (
     <header className="bg-background text-primary sticky top-0 z-50 w-full border-b border-border">
@@ -54,11 +57,12 @@ const Header = () => {
             <ExternalLink href="https://github.com/Im-Madhur-Gupta/memecoin-maverick">
               About
             </ExternalLink>
-            {showButton && (
+            {showLandingCta && (
               <Button size="sm" onClick={handleGetStarted}>
-                {buttonText}
+                {landingCtaText}
               </Button>
             )}
+            {showConnectedUserInfo && <ConnectedUserInfo />}
           </nav>
         </div>
       </div>
