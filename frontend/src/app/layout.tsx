@@ -63,6 +63,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <meta name="base:app_id" content="69d7a6cbec96f8d98e3ef31c" />
+      </head>
       <body className={`bg-background mx-auto`}>
         <AppStoreProvider>
           <Header />
